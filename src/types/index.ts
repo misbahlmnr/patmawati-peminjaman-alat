@@ -9,6 +9,10 @@ export interface User {
   nisn?: string;
   nip?: string;
   avatar?: string;
+  phone?: string;
+  address?: string;
+  createdAt?: string;
+  status?: 'active' | 'inactive';
 }
 
 export interface Equipment {
@@ -21,9 +25,12 @@ export interface Equipment {
   location: string;
   image?: string;
   description?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type LoanStatus = 'diminta' | 'disetujui' | 'dipinjam' | 'terlambat' | 'dikembalikan';
+export type LoanDurationType = 'jam' | 'harian';
 
 export interface Loan {
   id: string;
@@ -34,11 +41,17 @@ export interface Loan {
   borrowerClass?: string;
   quantity: number;
   status: LoanStatus;
+  durationType: LoanDurationType;
   requestDate: string;
+  requestTime: string; // HH:MM format
   approvalDate?: string;
+  approvalTime?: string;
   borrowDate?: string;
+  borrowTime?: string; // HH:MM format
   dueDate?: string;
+  dueTime?: string; // HH:MM format
   returnDate?: string;
+  returnTime?: string;
   notes?: string;
 }
 
@@ -58,4 +71,31 @@ export interface DashboardStats {
   activeLoans: number;
   overdueLoans: number;
   pendingRequests: number;
+}
+
+// Helper function to check if loan is overdue based on date AND time
+export function isLoanOverdue(loan: Loan): boolean {
+  if (!loan.dueDate || !loan.dueTime) {
+    return false;
+  }
+  if (loan.status === 'dikembalikan') {
+    return false;
+  }
+  
+  const now = new Date();
+  const [hours, minutes] = loan.dueTime.split(':').map(Number);
+  const dueDateTime = new Date(loan.dueDate);
+  dueDateTime.setHours(hours, minutes, 0, 0);
+  
+  return now > dueDateTime && loan.status !== 'dikembalikan';
+}
+
+// Format date and time for display
+export function formatDateTime(date: string, time: string): string {
+  const dateObj = new Date(date);
+  return `${dateObj.toLocaleDateString('id-ID', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric' 
+  })} ${time}`;
 }

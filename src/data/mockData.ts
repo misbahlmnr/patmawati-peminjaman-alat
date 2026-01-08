@@ -1,4 +1,81 @@
-import { Equipment, Loan, Notification, DashboardStats } from '@/types';
+import { Equipment, Loan, Notification, DashboardStats, User } from '@/types';
+
+export const usersData: User[] = [
+  {
+    id: '1',
+    name: 'Admin Lab AV',
+    email: 'admin@smkn7bekasi.sch.id',
+    role: 'admin',
+    nip: '198501152010011001',
+    phone: '081234567890',
+    status: 'active',
+    createdAt: '2025-01-01',
+  },
+  {
+    id: '2',
+    name: 'Bpk. Ahmad Wijaya',
+    email: 'ahmad.wijaya@smkn7bekasi.sch.id',
+    role: 'guru',
+    nip: '198705202012011002',
+    phone: '081234567891',
+    status: 'active',
+    createdAt: '2025-01-15',
+  },
+  {
+    id: '3',
+    name: 'Rina Permata',
+    email: 'rina.permata@siswa.smkn7bekasi.sch.id',
+    role: 'siswa',
+    nisn: '0051234567',
+    class: 'XII TAV 1',
+    phone: '081234567892',
+    status: 'active',
+    createdAt: '2025-02-01',
+  },
+  {
+    id: '4',
+    name: 'Budi Santoso',
+    email: 'budi.santoso@siswa.smkn7bekasi.sch.id',
+    role: 'siswa',
+    nisn: '0051234568',
+    class: 'XI TAV 2',
+    phone: '081234567893',
+    status: 'active',
+    createdAt: '2025-02-05',
+  },
+  {
+    id: '5',
+    name: 'Dewi Anggraini',
+    email: 'dewi.anggraini@siswa.smkn7bekasi.sch.id',
+    role: 'siswa',
+    nisn: '0051234569',
+    class: 'XII TAV 1',
+    phone: '081234567894',
+    status: 'active',
+    createdAt: '2025-02-10',
+  },
+  {
+    id: '6',
+    name: 'Andi Pratama',
+    email: 'andi.pratama@siswa.smkn7bekasi.sch.id',
+    role: 'siswa',
+    nisn: '0051234570',
+    class: 'XI TAV 1',
+    phone: '081234567895',
+    status: 'active',
+    createdAt: '2025-02-15',
+  },
+  {
+    id: '7',
+    name: 'Ibu Sri Wahyuni',
+    email: 'sri.wahyuni@smkn7bekasi.sch.id',
+    role: 'guru',
+    nip: '198905102015012003',
+    phone: '081234567896',
+    status: 'active',
+    createdAt: '2025-01-20',
+  },
+];
 
 export const equipmentData: Equipment[] = [
   {
@@ -10,6 +87,7 @@ export const equipmentData: Equipment[] = [
     condition: 'baik',
     location: 'Rak A1',
     description: 'Kamera DSLR profesional untuk rekaman video dan fotografi',
+    createdAt: '2025-01-01',
   },
   {
     id: '2',
@@ -20,6 +98,7 @@ export const equipmentData: Equipment[] = [
     condition: 'baik',
     location: 'Rak B2',
     description: 'Mikrofon condenser berkualitas studio',
+    createdAt: '2025-01-01',
   },
   {
     id: '3',
@@ -30,6 +109,7 @@ export const equipmentData: Equipment[] = [
     condition: 'baik',
     location: 'Rak C1',
     description: 'Tripod video profesional dengan fluid head',
+    createdAt: '2025-01-01',
   },
   {
     id: '4',
@@ -40,6 +120,7 @@ export const equipmentData: Equipment[] = [
     condition: 'baik',
     location: 'Rak D1',
     description: 'Mixer audio 12 channel dengan efek built-in',
+    createdAt: '2025-01-01',
   },
   {
     id: '5',
@@ -50,6 +131,7 @@ export const equipmentData: Equipment[] = [
     condition: 'baik',
     location: 'Rak E1',
     description: 'Kabel audio XLR male to female',
+    createdAt: '2025-01-01',
   },
   {
     id: '6',
@@ -60,6 +142,7 @@ export const equipmentData: Equipment[] = [
     condition: 'baik',
     location: 'Rak F1',
     description: 'Lampu LED panel untuk video production',
+    createdAt: '2025-01-01',
   },
   {
     id: '7',
@@ -70,6 +153,7 @@ export const equipmentData: Equipment[] = [
     condition: 'baik',
     location: 'Rak G1',
     description: 'Headphone monitoring studio profesional',
+    createdAt: '2025-01-01',
   },
   {
     id: '8',
@@ -80,6 +164,7 @@ export const equipmentData: Equipment[] = [
     condition: 'baik',
     location: 'Rak H1',
     description: 'Gimbal stabilizer untuk kamera mirrorless',
+    createdAt: '2025-01-01',
   },
 ];
 
@@ -93,10 +178,15 @@ export const loansData: Loan[] = [
     borrowerClass: 'XII TAV 1',
     quantity: 1,
     status: 'dipinjam',
+    durationType: 'harian',
     requestDate: '2026-01-05',
+    requestTime: '08:00',
     approvalDate: '2026-01-05',
+    approvalTime: '09:30',
     borrowDate: '2026-01-06',
+    borrowTime: '10:00',
     dueDate: '2026-01-10',
+    dueTime: '16:00',
     notes: 'Untuk tugas akhir dokumentasi',
   },
   {
@@ -108,10 +198,15 @@ export const loansData: Loan[] = [
     borrowerClass: 'XI TAV 2',
     quantity: 2,
     status: 'terlambat',
-    requestDate: '2026-01-01',
-    approvalDate: '2026-01-01',
-    borrowDate: '2026-01-02',
-    dueDate: '2026-01-06',
+    durationType: 'jam',
+    requestDate: '2026-01-08',
+    requestTime: '07:30',
+    approvalDate: '2026-01-08',
+    approvalTime: '08:00',
+    borrowDate: '2026-01-08',
+    borrowTime: '09:00',
+    dueDate: '2026-01-08',
+    dueTime: '12:00',
     notes: 'Rekaman podcast sekolah',
   },
   {
@@ -123,7 +218,9 @@ export const loansData: Loan[] = [
     borrowerClass: 'XII TAV 1',
     quantity: 1,
     status: 'diminta',
+    durationType: 'jam',
     requestDate: '2026-01-08',
+    requestTime: '10:30',
     notes: 'Untuk praktik videografi',
   },
   {
@@ -135,9 +232,13 @@ export const loansData: Loan[] = [
     borrowerClass: 'XI TAV 1',
     quantity: 1,
     status: 'disetujui',
+    durationType: 'harian',
     requestDate: '2026-01-07',
+    requestTime: '14:00',
     approvalDate: '2026-01-08',
+    approvalTime: '08:15',
     dueDate: '2026-01-12',
+    dueTime: '16:00',
     notes: 'Event pentas seni sekolah',
   },
   {
@@ -149,11 +250,17 @@ export const loansData: Loan[] = [
     borrowerClass: 'XII TAV 1',
     quantity: 2,
     status: 'dikembalikan',
+    durationType: 'harian',
     requestDate: '2025-12-20',
+    requestTime: '08:00',
     approvalDate: '2025-12-20',
+    approvalTime: '08:30',
     borrowDate: '2025-12-21',
+    borrowTime: '09:00',
     dueDate: '2025-12-25',
+    dueTime: '16:00',
     returnDate: '2025-12-24',
+    returnTime: '14:30',
     notes: 'Sesi foto studio',
   },
 ];
@@ -163,7 +270,7 @@ export const notificationsData: Notification[] = [
     id: '1',
     userId: '3',
     title: 'Pengingat Pengembalian',
-    message: 'Kamera DSLR Canon EOS 80D harus dikembalikan dalam 2 hari',
+    message: 'Kamera DSLR Canon EOS 80D harus dikembalikan pada 10 Jan 2026 pukul 16:00',
     type: 'warning',
     read: false,
     createdAt: '2026-01-08T10:00:00Z',
@@ -181,10 +288,19 @@ export const notificationsData: Notification[] = [
     id: '3',
     userId: '1',
     title: 'Keterlambatan Pengembalian',
-    message: 'Budi Santoso terlambat mengembalikan Microphone Rode NT1',
+    message: 'Budi Santoso terlambat mengembalikan Microphone Rode NT1 (Jatuh tempo: 08 Jan 2026, 12:00)',
     type: 'error',
     read: false,
-    createdAt: '2026-01-07T08:00:00Z',
+    createdAt: '2026-01-08T12:05:00Z',
+  },
+  {
+    id: '4',
+    userId: '4',
+    title: 'PERINGATAN: Keterlambatan',
+    message: 'Anda terlambat mengembalikan Microphone Condenser Rode NT1. Segera kembalikan peralatan!',
+    type: 'error',
+    read: false,
+    createdAt: '2026-01-08T12:05:00Z',
   },
 ];
 
@@ -195,3 +311,25 @@ export const dashboardStats: DashboardStats = {
   overdueLoans: 2,
   pendingRequests: 5,
 };
+
+export const equipmentCategories = [
+  'Kamera',
+  'Mikrofon',
+  'Tripod',
+  'Mixer',
+  'Kabel',
+  'Lighting',
+  'Headphone',
+  'Stabilizer',
+  'Monitor',
+  'Speaker',
+];
+
+export const classOptions = [
+  'X TAV 1',
+  'X TAV 2',
+  'XI TAV 1',
+  'XI TAV 2',
+  'XII TAV 1',
+  'XII TAV 2',
+];
