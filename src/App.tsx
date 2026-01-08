@@ -15,6 +15,8 @@ import MyLoans from "./pages/MyLoans";
 import RequestLoan from "./pages/RequestLoan";
 import History from "./pages/History";
 import Notifications from "./pages/Notifications";
+import Users from "./pages/Users";
+import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,8 +41,8 @@ const App = () => (
               <Route path="/request-loan" element={<RequestLoan />} />
               <Route path="/history" element={<History />} />
               <Route path="/notifications" element={<Notifications />} />
-              <Route path="/users" element={<Dashboard />} />
-              <Route path="/reports" element={<Dashboard />} />
+              <Route path="/users" element={<Users />} />
+              <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Dashboard />} />
             </Route>
 
