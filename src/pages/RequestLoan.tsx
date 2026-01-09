@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { EquipmentCard } from '@/components/equipment/EquipmentCard';
 import { equipmentData, usersData } from '@/data/mockData';
-import { Equipment, LoanDurationType } from '@/types';
-import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, Clock, User } from 'lucide-react';
+import { Equipment } from '@/types';
+import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CartItem {
@@ -23,7 +23,6 @@ export default function RequestLoan() {
   const [borrowTime, setBorrowTime] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
-  const [durationType, setDurationType] = useState<LoanDurationType>('harian');
   const [selectedTeacherId, setSelectedTeacherId] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -75,7 +74,6 @@ export default function RequestLoan() {
       borrowTime,
       dueDate, 
       dueTime,
-      durationType,
       teacherId: selectedTeacherId,
       teacherName: selectedTeacher?.name
     });
@@ -88,7 +86,6 @@ export default function RequestLoan() {
       setBorrowTime('');
       setDueDate('');
       setDueTime('');
-      setDurationType('harian');
       setSelectedTeacherId('');
     }, 3000);
   };
@@ -243,38 +240,6 @@ export default function RequestLoan() {
                       </option>
                     ))}
                   </select>
-                </div>
-
-                {/* Tipe Durasi */}
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    <Clock className="w-4 h-4 inline mr-2" />
-                    Tipe Peminjaman
-                  </label>
-                  <div className="flex gap-3">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="durationType"
-                        value="jam"
-                        checked={durationType === 'jam'}
-                        onChange={() => setDurationType('jam')}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <span className="text-sm">Per Jam</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="durationType"
-                        value="harian"
-                        checked={durationType === 'harian'}
-                        onChange={() => setDurationType('harian')}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <span className="text-sm">Harian</span>
-                    </label>
-                  </div>
                 </div>
 
                 {/* Tanggal & Waktu Pinjam */}

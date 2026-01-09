@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { loansData } from '@/data/mockData';
-import { LoanStatus } from '@/types';
-import { FileText, Calendar, Clock, AlertTriangle, CheckCircle2, Package } from 'lucide-react';
+import { LoanStatus, formatDateTime } from '@/types';
+import { FileText, Calendar, Clock, AlertTriangle, CheckCircle2, Package, Send, X, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format, differenceInDays } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { differenceInDays } from 'date-fns';
 
 export default function MyLoans() {
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<LoanStatus | 'all'>('all');
+  const [returnModal, setReturnModal] = useState<{ open: boolean; loanId: string | null }>({ open: false, loanId: null });
+  const [returnNotes, setReturnNotes] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Filter loans for current user (demo: show all for testing)
   const myLoans = loansData.filter(loan => {
@@ -18,15 +20,111 @@ export default function MyLoans() {
     return matchesStatus;
   });
 
-  const activeLoans = myLoans.filter(l => l.status === 'dipinjam' || l.status === 'disetujui' || l.status === 'terlambat');
-
-  const getDaysRemaining = (dueDate: string) => {
+  const getDaysRemaining = (dueDate: string, dueTime?: string) => {
+    if (dueTime) {
+      const [hours, minutes] = dueTime.split(':').map(Number);
+      const dueDateTime = new Date(dueDate);
+      dueDateTime.setHours(hours, minutes, 0, 0);
+      const now = new Date();
+      const diffMs = dueDateTime.getTime() - now.getTime();
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      if (Math.abs(diffHours) < 24) {
+        return { value: diffHours, unit: 'jam' };
+      }
+    }
     const days = differenceInDays(new Date(dueDate), new Date());
-    return days;
+    return { value: days, unit: 'hari' };
   };
+
+  const handleRequestReturn = (loanId: string) => {
+    setReturnModal({ open: true, loanId });
+    setReturnNotes('');
+  };
+
+  const handleSubmitReturn = () => {
+    console.log('Submit return request:', { loanId: returnModal.loanId, notes: returnNotes });
+    setReturnModal({ open: false, loanId: null });
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const getLoan = (id: string) => loansData.find(l => l.id === id);
 
   return (
     <div className="animate-fade-in">
+      {/* Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-2xl p-8 max-w-sm w-full mx-4 text-center animate-scale-in">
+            <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
+              <Check className="w-8 h-8 text-success" />
+            </div>
+            <h3 className="text-xl font-bold text-foreground mb-2">Permintaan Pengembalian Terkirim!</h3>
+            <p className="text-muted-foreground">
+              Silakan serahkan peralatan ke admin untuk verifikasi.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Return Request Modal */}
+      {returnModal.open && returnModal.loanId && (
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-2xl p-6 max-w-md w-full animate-scale-in">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-foreground">Ajukan Pengembalian</h3>
+              <button 
+                onClick={() => setReturnModal({ open: false, loanId: null })}
+                className="p-1 hover:bg-secondary rounded-lg"
+              >
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+            
+            {/* Loan Info */}
+            <div className="bg-secondary/50 rounded-lg p-4 mb-4">
+              <p className="font-medium text-foreground">{getLoan(returnModal.loanId)?.equipmentName}</p>
+              <p className="text-sm text-muted-foreground">
+                Jumlah: {getLoan(returnModal.loanId)?.quantity} unit
+              </p>
+              {getLoan(returnModal.loanId)?.dueDate && getLoan(returnModal.loanId)?.dueTime && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Jatuh Tempo: {formatDateTime(getLoan(returnModal.loanId)!.dueDate!, getLoan(returnModal.loanId)!.dueTime!)}
+                </p>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Catatan Pengembalian (Opsional)
+              </label>
+              <textarea
+                value={returnNotes}
+                onChange={(e) => setReturnNotes(e.target.value)}
+                placeholder="Kondisi peralatan saat dikembalikan..."
+                className="form-input min-h-[80px] resize-none"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setReturnModal({ open: false, loanId: null })}
+                className="btn-outline flex-1"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSubmitReturn}
+                className="btn-primary flex-1"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Ajukan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="page-header">
         <div>
@@ -65,9 +163,9 @@ export default function MyLoans() {
       {myLoans.length > 0 ? (
         <div className="space-y-4">
           {myLoans.map((loan) => {
-            const daysRemaining = loan.dueDate ? getDaysRemaining(loan.dueDate) : null;
-            const isOverdue = daysRemaining !== null && daysRemaining < 0;
-            const isUrgent = daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 2;
+            const remaining = loan.dueDate ? getDaysRemaining(loan.dueDate, loan.dueTime) : null;
+            const isOverdue = remaining !== null && remaining.value < 0;
+            const isUrgent = remaining !== null && remaining.value >= 0 && remaining.value <= 2;
 
             return (
               <div 
@@ -95,6 +193,11 @@ export default function MyLoans() {
                       <p className="text-sm text-muted-foreground">
                         Jumlah: {loan.quantity} unit
                       </p>
+                      {loan.teacherName && (
+                        <p className="text-sm text-muted-foreground">
+                          Guru Pembimbing: {loan.teacherName}
+                        </p>
+                      )}
                       {loan.notes && (
                         <p className="text-sm text-muted-foreground mt-1">
                           Catatan: {loan.notes}
@@ -103,15 +206,15 @@ export default function MyLoans() {
                     </div>
                   </div>
 
-                  {/* Dates */}
+                  {/* Dates with Time */}
                   <div className="flex flex-wrap gap-6 lg:gap-8">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
                       <div>
-                        <p className="text-xs text-muted-foreground">Tanggal Pinjam</p>
+                        <p className="text-xs text-muted-foreground">Tanggal & Waktu Pinjam</p>
                         <p className="text-sm font-medium">
-                          {loan.borrowDate 
-                            ? format(new Date(loan.borrowDate), 'd MMM yyyy', { locale: id })
+                          {loan.borrowDate && loan.borrowTime
+                            ? formatDateTime(loan.borrowDate, loan.borrowTime)
                             : '-'
                           }
                         </p>
@@ -130,16 +233,16 @@ export default function MyLoans() {
                           isOverdue && 'text-destructive',
                           isUrgent && !isOverdue && 'text-warning'
                         )}>
-                          {loan.dueDate 
-                            ? format(new Date(loan.dueDate), 'd MMM yyyy', { locale: id })
+                          {loan.dueDate && loan.dueTime
+                            ? formatDateTime(loan.dueDate, loan.dueTime)
                             : '-'
                           }
                         </p>
                       </div>
                     </div>
 
-                    {/* Days indicator */}
-                    {daysRemaining !== null && loan.status !== 'dikembalikan' && (
+                    {/* Days/Hours indicator */}
+                    {remaining !== null && loan.status !== 'dikembalikan' && (
                       <div className={cn(
                         "flex items-center gap-2 px-3 py-1.5 rounded-lg",
                         isOverdue 
@@ -155,8 +258,8 @@ export default function MyLoans() {
                         )}
                         <span className="text-sm font-medium">
                           {isOverdue 
-                            ? `Terlambat ${Math.abs(daysRemaining)} hari`
-                            : `${daysRemaining} hari lagi`
+                            ? `Terlambat ${Math.abs(remaining.value)} ${remaining.unit}`
+                            : `${remaining.value} ${remaining.unit} lagi`
                           }
                         </span>
                       </div>
@@ -165,7 +268,11 @@ export default function MyLoans() {
 
                   {/* Actions */}
                   {(loan.status === 'dipinjam' || loan.status === 'terlambat') && (
-                    <button className="btn-primary lg:ml-4">
+                    <button 
+                      onClick={() => handleRequestReturn(loan.id)}
+                      className="btn-primary lg:ml-4"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
                       Ajukan Pengembalian
                     </button>
                   )}
