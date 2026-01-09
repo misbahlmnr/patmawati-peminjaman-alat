@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { EquipmentCard } from '@/components/equipment/EquipmentCard';
-import { equipmentData } from '@/data/mockData';
-import { Equipment } from '@/types';
-import { Search, ShoppingCart, X, Calendar, FileText, Send, Check } from 'lucide-react';
+import { equipmentData, usersData } from '@/data/mockData';
+import { Equipment, LoanDurationType } from '@/types';
+import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, Clock, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CartItem {
@@ -11,13 +11,20 @@ interface CartItem {
   quantity: number;
 }
 
+// Get list of teachers
+const teachersList = usersData.filter(u => u.role === 'guru');
+
 export default function RequestLoan() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [notes, setNotes] = useState('');
   const [borrowDate, setBorrowDate] = useState('');
+  const [borrowTime, setBorrowTime] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [dueTime, setDueTime] = useState('');
+  const [durationType, setDurationType] = useState<LoanDurationType>('harian');
+  const [selectedTeacherId, setSelectedTeacherId] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
 
   const availableEquipment = equipmentData.filter(e => 
@@ -59,15 +66,30 @@ export default function RequestLoan() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const selectedTeacher = teachersList.find(t => t.id === selectedTeacherId);
     // Simulate submission
-    console.log('Submit loan request:', { cart, notes, borrowDate, dueDate });
+    console.log('Submit loan request:', { 
+      cart, 
+      notes, 
+      borrowDate, 
+      borrowTime,
+      dueDate, 
+      dueTime,
+      durationType,
+      teacherId: selectedTeacherId,
+      teacherName: selectedTeacher?.name
+    });
     setShowSuccess(true);
     setTimeout(() => {
       setShowSuccess(false);
       setCart([]);
       setNotes('');
       setBorrowDate('');
+      setBorrowTime('');
       setDueDate('');
+      setDueTime('');
+      setDurationType('harian');
+      setSelectedTeacherId('');
     }, 3000);
   };
 
@@ -202,33 +224,106 @@ export default function RequestLoan() {
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Guru Pembimbing */}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    <Calendar className="w-4 h-4 inline mr-2" />
-                    Tanggal Pinjam
+                    <User className="w-4 h-4 inline mr-2" />
+                    Guru Pembimbing
                   </label>
-                  <input
-                    type="date"
-                    value={borrowDate}
-                    onChange={(e) => setBorrowDate(e.target.value)}
+                  <select
+                    value={selectedTeacherId}
+                    onChange={(e) => setSelectedTeacherId(e.target.value)}
                     className="form-input"
                     required
-                  />
+                  >
+                    <option value="">Pilih guru pembimbing...</option>
+                    {teachersList.map((teacher) => (
+                      <option key={teacher.id} value={teacher.id}>
+                        {teacher.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
+                {/* Tipe Durasi */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    <Clock className="w-4 h-4 inline mr-2" />
+                    Tipe Peminjaman
+                  </label>
+                  <div className="flex gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="durationType"
+                        value="jam"
+                        checked={durationType === 'jam'}
+                        onChange={() => setDurationType('jam')}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <span className="text-sm">Per Jam</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="durationType"
+                        value="harian"
+                        checked={durationType === 'harian'}
+                        onChange={() => setDurationType('harian')}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <span className="text-sm">Harian</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Tanggal & Waktu Pinjam */}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     <Calendar className="w-4 h-4 inline mr-2" />
-                    Tanggal Pengembalian
+                    Tanggal & Waktu Pinjam
                   </label>
-                  <input
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    min={borrowDate}
-                    className="form-input"
-                    required
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="date"
+                      value={borrowDate}
+                      onChange={(e) => setBorrowDate(e.target.value)}
+                      className="form-input"
+                      required
+                    />
+                    <input
+                      type="time"
+                      value={borrowTime}
+                      onChange={(e) => setBorrowTime(e.target.value)}
+                      className="form-input"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Tanggal & Waktu Pengembalian */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    <Calendar className="w-4 h-4 inline mr-2" />
+                    Batas Waktu Pengembalian
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      min={borrowDate}
+                      className="form-input"
+                      required
+                    />
+                    <input
+                      type="time"
+                      value={dueTime}
+                      onChange={(e) => setDueTime(e.target.value)}
+                      className="form-input"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -247,7 +342,7 @@ export default function RequestLoan() {
 
                 <button
                   type="submit"
-                  disabled={cart.length === 0}
+                  disabled={cart.length === 0 || !selectedTeacherId}
                   className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4 mr-2" />
