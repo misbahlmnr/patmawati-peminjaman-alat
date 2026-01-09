@@ -39,6 +39,8 @@ export interface Loan {
   borrowerId: string;
   borrowerName: string;
   borrowerClass?: string;
+  teacherId?: string; // ID guru pembimbing
+  teacherName?: string; // Nama guru pembimbing
   quantity: number;
   status: LoanStatus;
   durationType: LoanDurationType;
@@ -87,7 +89,7 @@ export function isLoanOverdue(loan: Loan): boolean {
   const dueDateTime = new Date(loan.dueDate);
   dueDateTime.setHours(hours, minutes, 0, 0);
   
-  return now > dueDateTime && loan.status !== 'dikembalikan';
+  return now > dueDateTime;
 }
 
 // Format date and time for display
