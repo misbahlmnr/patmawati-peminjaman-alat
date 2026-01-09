@@ -28,7 +28,6 @@ const adminMenuItems = [
   { icon: ClipboardList, label: 'Peminjaman', path: '/loans' },
   { icon: Bell, label: 'Notifikasi', path: '/notifications' },
   { icon: BarChart3, label: 'Laporan', path: '/reports' },
-  { icon: Settings, label: 'Pengaturan', path: '/settings' },
 ];
 
 const guruMenuItems = [
@@ -58,14 +57,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     ? guruMenuItems 
     : siswaMenuItems;
 
-  const getRoleBadge = () => {
-    switch (user?.role) {
-      case 'admin': return 'Administrator';
-      case 'guru': return 'Guru';
-      case 'siswa': return 'Siswa';
-      default: return '';
-    }
-  };
 
   return (
     <>
@@ -105,24 +96,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
         </div>
 
-        {/* User Info */}
-        <div className="p-4 border-b border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center">
-              <span className="text-sm font-medium text-sidebar-foreground">
-                {user?.name?.charAt(0)}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {user?.name}
-              </p>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sidebar-primary text-sidebar-primary-foreground">
-                {getRoleBadge()}
-              </span>
-            </div>
-          </div>
-        </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-4 overflow-y-auto">

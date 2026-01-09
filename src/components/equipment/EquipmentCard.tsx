@@ -21,7 +21,6 @@ const categoryIcons: Record<string, React.ElementType> = {
 
 export function EquipmentCard({ equipment, onBorrow, showBorrowButton = true }: EquipmentCardProps) {
   const Icon = categoryIcons[equipment.category] || Box;
-  const availabilityPercent = (equipment.available / equipment.stock) * 100;
   
   return (
     <div className="equipment-card animate-slide-up">
@@ -44,22 +43,17 @@ export function EquipmentCard({ equipment, onBorrow, showBorrowButton = true }: 
       )}
 
       {/* Stock Info */}
-      <div className="mt-4 space-y-2">
-        <div className="flex justify-between text-sm">
+      <div className="mt-4">
+        <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Ketersediaan</span>
-          <span className="font-medium text-foreground">
+          <span className={cn(
+            "font-semibold px-2 py-0.5 rounded",
+            equipment.available > 0 
+              ? 'bg-success/10 text-success' 
+              : 'bg-destructive/10 text-destructive'
+          )}>
             {equipment.available} / {equipment.stock} unit
           </span>
-        </div>
-        <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-          <div 
-            className={cn(
-              "h-full rounded-full transition-all duration-500",
-              availabilityPercent > 50 ? 'bg-success' : 
-              availabilityPercent > 20 ? 'bg-warning' : 'bg-destructive'
-            )}
-            style={{ width: `${availabilityPercent}%` }}
-          />
         </div>
       </div>
 
