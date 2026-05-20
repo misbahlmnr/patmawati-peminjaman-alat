@@ -336,8 +336,19 @@ export const equipmentCategories = [
   'Lighting',
   'Headphone',
   'Stabilizer',
-  'Monitor',
-  'Speaker',
+  'Alat Elektro',
+  'Tools',
+];
+
+export const materialCategories = [
+  'Komponen Elektro',
+  'Konsumabel',
+  'Kabel & Konektor',
+  'Lainnya',
+];
+
+export const materialUnits: Array<'pcs' | 'pack' | 'roll' | 'meter' | 'set'> = [
+  'pcs', 'pack', 'roll', 'meter', 'set',
 ];
 
 export const classOptions = [
