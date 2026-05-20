@@ -39,32 +39,35 @@ export interface Equipment {
   minStock?: number;            // ambang stok menipis
 }
 
-export type LoanStatus = 'diminta' | 'disetujui' | 'dipinjam' | 'terlambat' | 'dikembalikan';
+export type LoanStatus = 'diminta' | 'disetujui' | 'dipinjam' | 'terlambat' | 'dikembalikan' | 'ditolak' | 'diambil';
 export type LoanDurationType = 'jam' | 'harian';
 
 export interface Loan {
   id: string;
   equipmentId: string;
   equipmentName: string;
+  itemType: ItemType;
   borrowerId: string;
   borrowerName: string;
   borrowerClass?: string;
-  teacherId?: string; // ID guru pembimbing
-  teacherName?: string; // Nama guru pembimbing
+  teacherId?: string;
+  teacherName?: string;
   quantity: number;
   status: LoanStatus;
-  durationType: LoanDurationType;
+  durationType?: LoanDurationType;
   requestDate: string;
-  requestTime: string; // HH:MM format
+  requestTime: string;
   approvalDate?: string;
   approvalTime?: string;
   borrowDate?: string;
-  borrowTime?: string; // HH:MM format
+  borrowTime?: string;
   dueDate?: string;
-  dueTime?: string; // HH:MM format
+  dueTime?: string;
   returnDate?: string;
   returnTime?: string;
+  returnRequestedAt?: string;
   notes?: string;
+  rejectionReason?: string;
 }
 
 export interface Notification {
@@ -75,6 +78,7 @@ export interface Notification {
   type: 'info' | 'warning' | 'success' | 'error';
   read: boolean;
   createdAt: string;
+  loanId?: string;
 }
 
 export interface DashboardStats {
