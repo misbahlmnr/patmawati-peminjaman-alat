@@ -13,6 +13,8 @@ import {
   History,
   BarChart3,
   X,
+  Wrench,
+  Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,7 +26,8 @@ interface SidebarProps {
 const adminMenuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: Users, label: 'Kelola Pengguna', path: '/users' },
-  { icon: Box, label: 'Peralatan', path: '/equipment' },
+  { icon: Wrench, label: 'Kelola Alat', path: '/equipment?tab=alat' },
+  { icon: Package, label: 'Kelola Bahan', path: '/equipment?tab=bahan' },
   { icon: ClipboardList, label: 'Peminjaman', path: '/loans' },
   { icon: Bell, label: 'Notifikasi', path: '/notifications' },
   { icon: BarChart3, label: 'Laporan', path: '/reports' },
@@ -32,7 +35,7 @@ const adminMenuItems = [
 
 const guruMenuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-  { icon: Box, label: 'Peralatan', path: '/equipment' },
+  { icon: Box, label: 'Inventaris', path: '/equipment' },
   { icon: ClipboardList, label: 'Peminjaman Siswa', path: '/loans' },
   { icon: History, label: 'Riwayat', path: '/history' },
   { icon: BarChart3, label: 'Laporan', path: '/reports' },
@@ -40,7 +43,8 @@ const guruMenuItems = [
 
 const siswaMenuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-  { icon: Box, label: 'Peralatan', path: '/equipment' },
+  { icon: Wrench, label: 'Alat Lab', path: '/equipment?tab=alat' },
+  { icon: Package, label: 'Bahan Lab', path: '/equipment?tab=bahan' },
   { icon: FileText, label: 'Ajukan Peminjaman', path: '/request-loan' },
   { icon: ClipboardList, label: 'Peminjaman Saya', path: '/my-loans' },
   { icon: History, label: 'Riwayat', path: '/history' },
@@ -102,8 +106,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <ul className="space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              
+              const [pathOnly, queryStr] = item.path.split('?');
+              const itemTab = new URLSearchParams(queryStr || '').get('tab');
+              const currentTab = new URLSearchParams(location.search).get('tab');
+              const isActive = location.pathname === pathOnly &&
+                (itemTab ? currentTab === itemTab : true);
+
               return (
                 <li key={item.path}>
                   <NavLink
