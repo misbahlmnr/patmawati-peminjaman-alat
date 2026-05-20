@@ -1,26 +1,36 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useData } from '@/contexts/DataContext';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { RecentLoansTable } from '@/components/dashboard/RecentLoansTable';
 import { EquipmentCard } from '@/components/equipment/EquipmentCard';
-import { dashboardStats, loansData, equipmentData, notificationsData } from '@/data/mockData';
-import { 
-  Box, 
-  FileText, 
-  Clock, 
-  AlertTriangle, 
+import {
+  Box,
+  FileText,
+  Clock,
+  AlertTriangle,
   CheckCircle2,
   ArrowRight,
   Bell
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { loans: loansData, equipment: equipmentData, notifications, approveLoan, rejectLoan } = useData();
+  const navigate = useNavigate();
 
-  const pendingLoans = loansData.filter(l => l.status === 'diminta');
+  const pendingLoans = loansData.filter(l => l.status === 'diminta' && l.itemType === 'alat');
   const activeLoans = loansData.filter(l => l.status === 'dipinjam' || l.status === 'terlambat');
   const overdueLoans = loansData.filter(l => l.status === 'terlambat');
-  const userNotifications = notificationsData.filter(n => n.userId === user?.id && !n.read);
+  const userNotifications = notifications.filter(n => n.userId === user?.id && !n.read);
+
+  const dashboardStats = {
+    totalEquipment: equipmentData.length,
+    totalLoans: loansData.length,
+    activeLoans: activeLoans.length,
+    overdueLoans: overdueLoans.length,
+    pendingRequests: pendingLoans.length,
+  };
 
   const renderAdminDashboard = () => (
     <>
@@ -66,11 +76,11 @@ export default function Dashboard() {
               Lihat semua <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <RecentLoansTable 
-            loans={pendingLoans} 
-            showActions 
-            onApprove={(id) => console.log('Approve:', id)}
-            onReject={(id) => console.log('Reject:', id)}
+          <RecentLoansTable
+            loans={pendingLoans}
+            showActions
+            onApprove={(id) => approveLoan(id)}
+            onReject={(id) => rejectLoan(id, 'Ditolak dari dashboard')}
           />
         </div>
       )}
@@ -228,10 +238,10 @@ export default function Dashboard() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {equipmentData.filter(e => e.available > 0).slice(0, 4).map((eq) => (
-              <EquipmentCard 
-                key={eq.id} 
-                equipment={eq} 
-                onBorrow={() => console.log('Borrow:', eq.id)}
+              <EquipmentCard
+                key={eq.id}
+                equipment={eq}
+                onBorrow={() => navigate(`/request-loan?tab=${eq.itemType}&id=${eq.id}`)}
               />
             ))}
           </div>

@@ -1,131 +1,75 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { notificationsData } from '@/data/mockData';
+import { useData } from '@/contexts/DataContext';
 import { Bell, AlertTriangle, CheckCircle2, Info, XCircle, Check, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { id as localeId } from 'date-fns/locale';
 
 export default function Notifications() {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState(notificationsData);
+  const { notifications, markRead, markAllRead, deleteNotification } = useData();
+  const navigate = useNavigate();
 
-  const userNotifications = notifications.filter(n => 
-    user?.role === 'admin' || n.userId === user?.id
-  );
+  const myNotifs = useMemo(() => notifications
+    .filter(n => user?.role === 'admin' ? n.userId === user.id : n.userId === user?.id)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  , [notifications, user]);
 
-  const unreadCount = userNotifications.filter(n => !n.read).length;
+  const unreadCount = myNotifs.filter(n => !n.read).length;
 
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(n =>
-      n.id === id ? { ...n, read: true } : n
-    ));
-  };
+  const getIcon = (t: string) => t === 'success' ? CheckCircle2 : t === 'warning' ? AlertTriangle : t === 'error' ? XCircle : Info;
+  const getColor = (t: string) => t === 'success' ? 'text-success bg-success/10' : t === 'warning' ? 'text-warning bg-warning/10' : t === 'error' ? 'text-destructive bg-destructive/10' : 'text-info bg-info/10';
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(notifications.filter(n => n.id !== id));
-  };
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'success': return CheckCircle2;
-      case 'warning': return AlertTriangle;
-      case 'error': return XCircle;
-      default: return Info;
-    }
-  };
-
-  const getIconColor = (type: string) => {
-    switch (type) {
-      case 'success': return 'text-success bg-success/10';
-      case 'warning': return 'text-warning bg-warning/10';
-      case 'error': return 'text-destructive bg-destructive/10';
-      default: return 'text-info bg-info/10';
+  const handleClick = (id: string, loanId?: string) => {
+    markRead(id);
+    if (loanId) {
+      navigate(user?.role === 'admin' || user?.role === 'guru' ? '/loans' : '/my-loans');
     }
   };
 
   return (
     <div className="animate-fade-in">
-      {/* Page Header */}
       <div className="page-header">
         <div>
           <h1 className="section-title">Notifikasi</h1>
           <p className="text-muted-foreground mt-1">
-            {unreadCount > 0 ? `${unreadCount} notifikasi belum dibaca` : 'Semua notifikasi sudah dibaca'}
+            {unreadCount > 0 ? `${unreadCount} belum dibaca` : 'Semua sudah dibaca'}
           </p>
         </div>
-        {unreadCount > 0 && (
-          <button 
-            onClick={markAllAsRead}
-            className="btn-outline"
-          >
-            <Check className="w-4 h-4 mr-2" />
-            Tandai Semua Dibaca
+        {unreadCount > 0 && user && (
+          <button onClick={() => markAllRead(user.id)} className="btn-outline">
+            <Check className="w-4 h-4 mr-2" /> Tandai Semua Dibaca
           </button>
         )}
       </div>
 
-      {/* Notifications List */}
-      {userNotifications.length > 0 ? (
+      {myNotifs.length > 0 ? (
         <div className="space-y-3">
-          {userNotifications.map((notification) => {
-            const Icon = getIcon(notification.type);
+          {myNotifs.map(n => {
+            const Icon = getIcon(n.type);
             return (
-              <div
-                key={notification.id}
-                className={cn(
-                  "bg-card rounded-xl border p-5 transition-all hover:shadow-elevated",
-                  notification.read ? 'border-border' : 'border-primary/30 bg-primary/5'
-                )}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                    getIconColor(notification.type)
-                  )}>
-                    <Icon className="w-5 h-5" />
+              <div key={n.id} className={cn('bg-card rounded-xl border p-4 cursor-pointer transition-all hover:shadow-md',
+                n.read ? 'border-border' : 'border-primary/30 bg-primary/5')}
+                onClick={() => handleClick(n.id, n.loanId)}>
+                <div className="flex items-start gap-3">
+                  <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0', getColor(n.type))}>
+                    <Icon className="w-4 h-4" />
                   </div>
-
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className={cn(
-                          "font-medium",
-                          !notification.read && 'text-foreground',
-                          notification.read && 'text-muted-foreground'
-                        )}>
-                          {notification.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {format(new Date(notification.createdAt), "d MMMM yyyy, HH:mm", { locale: id })}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <h3 className={cn('font-medium text-sm', !n.read && 'text-foreground')}>{n.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-0.5">{n.message}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {format(new Date(n.createdAt), 'd MMM yyyy, HH:mm', { locale: localeId })}
                         </p>
                       </div>
-
-                      <div className="flex items-center gap-2">
-                        {!notification.read && (
-                          <button
-                            onClick={() => markAsRead(notification.id)}
-                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                            title="Tandai dibaca"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => deleteNotification(notification.id)}
-                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                          title="Hapus"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}
+                        className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -136,10 +80,7 @@ export default function Notifications() {
       ) : (
         <div className="text-center py-12 bg-card rounded-xl border border-border">
           <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-lg font-medium text-foreground mb-1">Tidak ada notifikasi</p>
-          <p className="text-muted-foreground">
-            Anda akan menerima notifikasi terkait peminjaman di sini
-          </p>
+          <p className="font-medium mb-1">Tidak ada notifikasi</p>
         </div>
       )}
     </div>

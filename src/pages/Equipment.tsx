@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useData } from '@/contexts/DataContext';
 import { EquipmentCard } from '@/components/equipment/EquipmentCard';
-import { equipmentData, equipmentCategories, materialCategories, materialUnits } from '@/data/mockData';
+import { equipmentCategories, materialCategories, materialUnits } from '@/data/mockData';
 import { Equipment, ItemType, MaterialUnit } from '@/types';
 import { Search, Filter, Plus, Grid, List, X, Check, Upload, Wrench, Package, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,6 +33,8 @@ const emptyForm: NewItemState = {
 
 export default function EquipmentPage() {
   const { user } = useAuth();
+  const { equipment: items, addEquipment, deleteEquipment } = useData();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = (searchParams.get('tab') as TabType) === 'bahan' ? 'bahan' : 'alat';
 
@@ -41,7 +44,6 @@ export default function EquipmentPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [items, setItems] = useState<Equipment[]>(equipmentData);
   const [form, setForm] = useState<NewItemState>(emptyForm);
 
   // Keep tab in sync with URL
@@ -92,7 +94,7 @@ export default function EquipmentPage() {
           condition: form.condition, location: form.location,
           description: form.description, createdAt: new Date().toISOString().slice(0, 10),
         };
-    setItems(prev => [base, ...prev]);
+    addEquipment(base);
     setShowAddModal(false);
     setShowSuccess(true);
     setForm(emptyForm);
@@ -101,7 +103,7 @@ export default function EquipmentPage() {
 
   const handleDelete = (id: string) => {
     if (confirm('Hapus item ini dari inventaris?')) {
-      setItems(prev => prev.filter(i => i.id !== id));
+      deleteEquipment(id);
     }
   };
 
@@ -389,7 +391,7 @@ export default function EquipmentPage() {
               <EquipmentCard
                 equipment={eq}
                 showBorrowButton={user?.role === 'siswa'}
-                onBorrow={() => console.log('Borrow:', eq.id)}
+                onBorrow={() => navigate(`/request-loan?tab=${eq.itemType}&id=${eq.id}`)}
               />
               {isAdmin && (
                 <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

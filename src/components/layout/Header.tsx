@@ -1,6 +1,7 @@
 import { Bell, Menu, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { notificationsData } from '@/data/mockData';
+import { useData } from '@/contexts/DataContext';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -8,10 +9,10 @@ interface HeaderProps {
 
 export function Header({ onMenuClick }: HeaderProps) {
   const { user } = useAuth();
-  
-  const unreadNotifications = notificationsData.filter(
-    n => n.userId === user?.id && !n.read
-  ).length;
+  const { unreadCount } = useData();
+  const navigate = useNavigate();
+
+  const unread = user ? unreadCount(user.id, user.role) : 0;
 
   return (
     <header className="h-16 bg-card border-b border-border px-4 lg:px-6 flex items-center justify-between">
@@ -48,11 +49,11 @@ export function Header({ onMenuClick }: HeaderProps) {
         </div>
 
         {/* Notifications */}
-        <button className="relative p-2 rounded-lg hover:bg-secondary">
+        <button onClick={() => navigate('/notifications')} className="relative p-2 rounded-lg hover:bg-secondary">
           <Bell className="w-5 h-5 text-muted-foreground" />
-          {unreadNotifications > 0 && (
-            <span className="absolute top-1 right-1 w-4 h-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
-              {unreadNotifications}
+          {unread > 0 && (
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-destructive text-destructive-foreground text-[10px] rounded-full flex items-center justify-center">
+              {unread}
             </span>
           )}
         </button>
