@@ -15,18 +15,28 @@ export interface User {
   status?: 'active' | 'inactive';
 }
 
+export type ItemType = 'alat' | 'bahan';
+export type MaterialUnit = 'pcs' | 'pack' | 'roll' | 'meter' | 'set';
+
 export interface Equipment {
   id: string;
   name: string;
   category: string;
-  stock: number;
-  available: number;
-  condition: 'baik' | 'rusak_ringan' | 'rusak_berat';
-  location: string;
+  itemType: ItemType;
+  // Common
+  stock: number;        // total stok
+  available: number;    // tersedia (alat: tersedia dipinjam, bahan: sisa stok)
   image?: string;
   description?: string;
   createdAt?: string;
   updatedAt?: string;
+  // Alat only
+  condition?: 'baik' | 'rusak_ringan' | 'rusak_berat';
+  location?: string;
+  // Bahan only
+  unit?: MaterialUnit;          // pcs / pack / roll / meter
+  stockRemaining?: number;      // alias jelas untuk sisa bahan
+  minStock?: number;            // ambang stok menipis
 }
 
 export type LoanStatus = 'diminta' | 'disetujui' | 'dipinjam' | 'terlambat' | 'dikembalikan';
