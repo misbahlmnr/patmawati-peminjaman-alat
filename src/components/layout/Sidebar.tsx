@@ -106,8 +106,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <ul className="space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              
+              const [pathOnly, queryStr] = item.path.split('?');
+              const params = new URLSearchParams(queryStr || '');
+              const currentParams = new URLSearchParams(location.search);
+              const tab = params.get('tab');
+              const isActive = location.pathname === pathOnly &&
+                (tab ? currentParams.get('tab') === tab : !currentParams.get('tab') || pathOnly !== '/equipment' ? location.pathname === pathOnly : true);
+
               return (
                 <li key={item.path}>
                   <NavLink
