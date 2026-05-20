@@ -95,7 +95,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setLoans(prev => {
         let changed = false;
         const next = prev.map(l => {
-          if ((l.status === 'dipinjam' || l.status === 'disetujui') && isLoanOverdue(l) && l.status !== 'terlambat') {
+          if ((l.status === 'dipinjam' || l.status === 'disetujui') && isLoanOverdue(l)) {
             changed = true;
             // notify
             setNotifications(n => {
