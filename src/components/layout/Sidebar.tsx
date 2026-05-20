@@ -107,11 +107,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             {menuItems.map((item) => {
               const Icon = item.icon;
               const [pathOnly, queryStr] = item.path.split('?');
-              const params = new URLSearchParams(queryStr || '');
-              const currentParams = new URLSearchParams(location.search);
-              const tab = params.get('tab');
+              const itemTab = new URLSearchParams(queryStr || '').get('tab');
+              const currentTab = new URLSearchParams(location.search).get('tab');
               const isActive = location.pathname === pathOnly &&
-                (tab ? currentParams.get('tab') === tab : !currentParams.get('tab') || pathOnly !== '/equipment' ? location.pathname === pathOnly : true);
+                (itemTab ? currentTab === itemTab : true);
 
               return (
                 <li key={item.path}>
