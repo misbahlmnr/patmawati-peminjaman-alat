@@ -4,8 +4,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { usersData } from '@/data/mockData';
 import { Equipment } from '@/types';
-import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, User, Wrench, Package, AlertCircle, Info } from 'lucide-react';
+import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, User, Wrench, Package, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { DateField } from '@/components/ui/date-field';
+import { TimeField } from '@/components/ui/time-field';
 
 interface CartItem {
   equipment: Equipment;
@@ -218,43 +225,43 @@ export default function RequestLoan() {
               <p className="text-sm text-muted-foreground text-center py-6">Belum ada item</p>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-1"><User className="w-3 h-3 inline mr-1" /> Guru Pembimbing</label>
-                <select value={teacherId} onChange={e => setTeacherId(e.target.value)} className="form-input" required>
-                  <option value="">Pilih guru...</option>
-                  {teachersList.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> Guru Pembimbing</Label>
+                <Select value={teacherId} onValueChange={setTeacherId}>
+                  <SelectTrigger><SelectValue placeholder="Pilih guru..." /></SelectTrigger>
+                  <SelectContent>
+                    {teachersList.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
 
               {!isBahan && (
                 <>
-                  <div>
-                    <label className="block text-sm font-medium mb-1"><Calendar className="w-3 h-3 inline mr-1" /> Pinjam (tgl & jam)</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input type="date" value={borrowDate} onChange={e => setBorrowDate(e.target.value)} className="form-input" required />
-                      <input type="time" value={borrowTime} onChange={e => setBorrowTime(e.target.value)} className="form-input" required />
-                    </div>
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Mulai Pinjam</Label>
+                    <DateField value={borrowDate} onChange={setBorrowDate} placeholder="Tanggal mulai" />
+                    <TimeField value={borrowTime} onChange={setBorrowTime} />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1"><Calendar className="w-3 h-3 inline mr-1" /> Batas Kembali (tgl & jam)</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} min={borrowDate} className="form-input" required />
-                      <input type="time" value={dueTime} onChange={e => setDueTime(e.target.value)} className="form-input" required />
-                    </div>
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Batas Kembali</Label>
+                    <DateField value={dueDate} onChange={setDueDate} placeholder="Tanggal batas" min={borrowDate} />
+                    <TimeField value={dueTime} onChange={setDueTime} />
                   </div>
                 </>
               )}
 
-              <div>
-                <label className="block text-sm font-medium mb-1"><FileText className="w-3 h-3 inline mr-1" /> Catatan / Keperluan</label>
-                <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={isBahan ? 'Untuk praktikum...' : 'Untuk tugas praktik...'} className="form-input min-h-[70px] resize-none" required />
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> Catatan / Keperluan</Label>
+                <Textarea value={notes} onChange={e => setNotes(e.target.value)}
+                  placeholder={isBahan ? 'Untuk praktikum...' : 'Untuk tugas praktik...'}
+                  className="min-h-[72px] resize-none" required />
               </div>
 
-              <button type="submit" disabled={cart.length === 0 || !teacherId} className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed">
+              <Button type="submit" disabled={cart.length === 0 || !teacherId || (!isBahan && (!borrowDate || !borrowTime || !dueDate || !dueTime))} className="w-full">
                 <Send className="w-4 h-4 mr-2" />
                 {isBahan ? 'Ambil Bahan' : 'Ajukan Peminjaman'}
-              </button>
+              </Button>
             </form>
           </div>
         </div>
