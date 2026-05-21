@@ -5,8 +5,14 @@ import { useData } from '@/contexts/DataContext';
 import { EquipmentCard } from '@/components/equipment/EquipmentCard';
 import { equipmentCategories, materialCategories, materialUnits } from '@/data/mockData';
 import { Equipment, ItemType, MaterialUnit } from '@/types';
-import { Search, Filter, Plus, Grid, List, X, Check, Upload, Wrench, Package, Pencil, Trash2 } from 'lucide-react';
+import { Search, Filter, Plus, Grid, List, X, Check, Upload, Wrench, Package, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { NumberInput } from '@/components/ui/number-input';
 
 type TabType = 'alat' | 'bahan';
 
