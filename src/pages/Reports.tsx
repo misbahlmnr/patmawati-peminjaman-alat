@@ -290,19 +290,11 @@ export default function Reports() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Dari Tanggal</Label>
-                <Input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                />
+                <DateField value={dateFrom} onChange={setDateFrom} placeholder="Pilih tanggal" />
               </div>
               <div className="space-y-2">
                 <Label>Sampai Tanggal</Label>
-                <Input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                />
+                <DateField value={dateTo} onChange={setDateTo} placeholder="Pilih tanggal" min={dateFrom} />
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
