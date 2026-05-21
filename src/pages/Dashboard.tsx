@@ -2,249 +2,129 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { RecentLoansTable } from '@/components/dashboard/RecentLoansTable';
-import { EquipmentCard } from '@/components/equipment/EquipmentCard';
 import {
-  Box,
-  FileText,
-  Clock,
-  AlertTriangle,
-  CheckCircle2,
-  ArrowRight,
-  Bell
+  ClipboardCheck, FileText, AlertTriangle, PackageMinus, Bell,
+  Wrench, Package, ArrowRight, CheckCircle2, Users as UsersIcon
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { loans: loansData, equipment: equipmentData, notifications, approveLoan, rejectLoan } = useData();
-  const navigate = useNavigate();
+  const { loans, equipment, notifications } = useData();
 
-  const pendingLoans = loansData.filter(l => l.status === 'diminta' && l.itemType === 'alat');
-  const activeLoans = loansData.filter(l => l.status === 'dipinjam' || l.status === 'terlambat');
-  const overdueLoans = loansData.filter(l => l.status === 'terlambat');
-  const userNotifications = notifications.filter(n => n.userId === user?.id && !n.read);
+  const pendingAlat = loans.filter(l => l.status === 'diminta' && l.itemType === 'alat');
+  const activeAlat = loans.filter(l => l.status === 'dipinjam' || l.status === 'terlambat');
+  const overdue = loans.filter(l => l.status === 'terlambat');
+  const lowStock = equipment.filter(e => e.itemType === 'bahan' && e.minStock !== undefined && (e.stockRemaining ?? e.available) <= e.minStock);
 
-  const dashboardStats = {
-    totalEquipment: equipmentData.length,
-    totalLoans: loansData.length,
-    activeLoans: activeLoans.length,
-    overdueLoans: overdueLoans.length,
-    pendingRequests: pendingLoans.length,
-  };
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+  const bahanThisWeek = loans.filter(l => l.itemType === 'bahan' && new Date(l.requestDate) >= weekAgo);
 
-  const renderAdminDashboard = () => (
+  // ===== ADMIN =====
+  const renderAdmin = () => (
     <>
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          title="Total Peralatan"
-          value={dashboardStats.totalEquipment}
-          icon={Box}
-          variant="primary"
-        />
-        <StatCard
-          title="Peminjaman Aktif"
-          value={dashboardStats.activeLoans}
-          icon={FileText}
-          trend={{ value: 12, isPositive: true }}
-        />
-        <StatCard
-          title="Menunggu Verifikasi"
-          value={dashboardStats.pendingRequests}
-          icon={Clock}
-          variant="warning"
-        />
-        <StatCard
-          title="Keterlambatan"
-          value={dashboardStats.overdueLoans}
-          icon={AlertTriangle}
-          variant="danger"
-        />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard title="Permintaan Pending" value={pendingAlat.length} icon={ClipboardCheck} variant={pendingAlat.length > 0 ? 'warning' : 'default'} />
+        <StatCard title="Alat Dipinjam" value={activeAlat.length} icon={FileText} variant="primary" />
+        <StatCard title="Keterlambatan" value={overdue.length} icon={AlertTriangle} variant={overdue.length > 0 ? 'danger' : 'default'} />
+        <StatCard title="Stok Bahan Menipis" value={lowStock.length} icon={PackageMinus} variant={lowStock.length > 0 ? 'warning' : 'default'} />
       </div>
 
-      {/* Pending Requests */}
-      {pendingLoans.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">
-              Permintaan Menunggu Verifikasi
+      <div className="bg-card rounded-2xl border border-border p-6">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+          <div>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              Verifikasi Permintaan
+              {pendingAlat.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-warning text-warning-foreground text-xs font-bold">{pendingAlat.length}</span>
+              )}
             </h2>
-            <Link 
-              to="/loans" 
-              className="text-sm text-primary hover:underline flex items-center gap-1"
-            >
-              Lihat semua <ArrowRight className="w-4 h-4" />
-            </Link>
+            <p className="text-sm text-muted-foreground mt-1">Permintaan peminjaman alat menunggu persetujuan.</p>
           </div>
-          <RecentLoansTable
-            loans={pendingLoans}
-            showActions
-            onApprove={(id) => approveLoan(id)}
-            onReject={(id) => rejectLoan(id, 'Ditolak dari dashboard')}
-          />
+          <Button asChild>
+            <Link to="/loans">Buka Verifikasi <ArrowRight className="w-4 h-4 ml-2" /></Link>
+          </Button>
         </div>
-      )}
-
-      {/* Active & Overdue Loans */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">
-              Peminjaman Aktif
-            </h2>
-            <span className="text-sm text-muted-foreground">
-              {activeLoans.length} peminjaman
-            </span>
+        {pendingAlat.length > 0 ? (
+          <RecentLoansTable loans={pendingAlat.slice(0, 5)} />
+        ) : (
+          <div className="text-center py-10">
+            <CheckCircle2 className="w-10 h-10 text-success mx-auto mb-2" />
+            <p className="text-muted-foreground text-sm">Tidak ada permintaan menunggu</p>
           </div>
-          <RecentLoansTable loans={activeLoans.slice(0, 5)} />
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-destructive" />
-              Keterlambatan
-            </h2>
-          </div>
-          {overdueLoans.length > 0 ? (
-            <RecentLoansTable loans={overdueLoans} />
-          ) : (
-            <div className="stat-card text-center py-8">
-              <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-3" />
-              <p className="text-muted-foreground">Tidak ada keterlambatan</p>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </>
   );
 
-  const renderGuruDashboard = () => (
+  // ===== GURU =====
+  const renderGuru = () => (
     <>
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <StatCard
-          title="Total Peralatan"
-          value={dashboardStats.totalEquipment}
-          icon={Box}
-          variant="primary"
-        />
-        <StatCard
-          title="Peminjaman Siswa Aktif"
-          value={dashboardStats.activeLoans}
-          icon={FileText}
-        />
-        <StatCard
-          title="Keterlambatan"
-          value={dashboardStats.overdueLoans}
-          icon={AlertTriangle}
-          variant="danger"
-        />
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <StatCard title="Siswa Pinjam Aktif" value={activeAlat.length} icon={UsersIcon} variant="primary" />
+        <StatCard title="Keterlambatan" value={overdue.length} icon={AlertTriangle} variant={overdue.length > 0 ? 'danger' : 'default'} />
+        <StatCard title="Bahan Diambil (7 hari)" value={bahanThisWeek.length} icon={Package} />
       </div>
 
-      {/* Recent Student Loans */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">
-            Peminjaman Siswa Terbaru
-          </h2>
-          <Link 
-            to="/loans" 
-            className="text-sm text-primary hover:underline flex items-center gap-1"
-          >
-            Lihat semua <ArrowRight className="w-4 h-4" />
-          </Link>
+      <div className="bg-card rounded-2xl border border-border p-6">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Peminjaman Siswa Terbaru</h2>
+            <p className="text-sm text-muted-foreground mt-1">Pantau aktivitas peminjaman siswa Anda.</p>
+          </div>
+          <Button asChild variant="outline">
+            <Link to="/loans">Lihat Semua <ArrowRight className="w-4 h-4 ml-2" /></Link>
+          </Button>
         </div>
-        <RecentLoansTable loans={loansData.slice(0, 5)} />
-      </div>
-
-      {/* Popular Equipment */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">
-          Peralatan Populer
-        </h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {equipmentData.slice(0, 3).map((eq) => (
-            <EquipmentCard key={eq.id} equipment={eq} showBorrowButton={false} />
-          ))}
-        </div>
+        <RecentLoansTable loans={loans.slice(0, 5)} />
       </div>
     </>
   );
 
-  const renderSiswaDashboard = () => {
-    const myLoans = loansData.filter(l => l.borrowerId === user?.id);
-    const myActiveLoans = myLoans.filter(l => l.status === 'dipinjam' || l.status === 'disetujui');
-    const myOverdue = myLoans.filter(l => l.status === 'terlambat');
+  // ===== SISWA =====
+  const renderSiswa = () => {
+    const my = loans.filter(l => l.borrowerId === user?.id);
+    const myActive = my.filter(l => l.status === 'dipinjam' || l.status === 'disetujui' || l.status === 'terlambat');
+    const myPending = my.filter(l => l.status === 'diminta');
+    const unread = notifications.filter(n => n.userId === user?.id && !n.read);
 
     return (
       <>
-        {/* Notifications Banner */}
-        {userNotifications.length > 0 && (
-          <div className="mb-6 p-4 rounded-xl bg-warning/10 border border-warning/20 flex items-start gap-4">
-            <Bell className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-foreground">Kamu memiliki {userNotifications.length} notifikasi baru</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {userNotifications[0]?.message}
-              </p>
+        {unread.length > 0 && (
+          <div className="mb-6 p-4 rounded-xl bg-warning/10 border border-warning/20 flex items-start gap-3">
+            <Bell className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-medium">{unread.length} notifikasi belum dibaca</p>
+              <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">{unread[0]?.message}</p>
             </div>
+            <Button asChild variant="outline" size="sm"><Link to="/notifications">Buka</Link></Button>
           </div>
         )}
 
-        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <StatCard
-            title="Peminjaman Aktif"
-            value={myActiveLoans.length}
-            icon={FileText}
-            variant="primary"
-          />
-          <StatCard
-            title="Total Riwayat"
-            value={myLoans.length}
-            icon={Clock}
-          />
-          <StatCard
-            title="Keterlambatan"
-            value={myOverdue.length}
-            icon={AlertTriangle}
-            variant={myOverdue.length > 0 ? 'danger' : 'default'}
-          />
+          <StatCard title="Pinjaman Alat Aktif" value={myActive.length} icon={FileText} variant="primary" />
+          <StatCard title="Pengajuan Pending" value={myPending.length} icon={ClipboardCheck} variant={myPending.length > 0 ? 'warning' : 'default'} />
+          <StatCard title="Notifikasi Baru" value={unread.length} icon={Bell} variant={unread.length > 0 ? 'warning' : 'default'} />
         </div>
 
-        {/* My Active Loans */}
-        {myActiveLoans.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-foreground mb-4">
-              Peminjaman Aktif Saya
-            </h2>
-            <RecentLoansTable loans={myActiveLoans} />
-          </div>
-        )}
-
-        {/* Available Equipment */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">
-              Peralatan Tersedia
-            </h2>
-            <Link 
-              to="/equipment" 
-              className="text-sm text-primary hover:underline flex items-center gap-1"
-            >
-              Lihat semua <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {equipmentData.filter(e => e.available > 0).slice(0, 4).map((eq) => (
-              <EquipmentCard
-                key={eq.id}
-                equipment={eq}
-                onBorrow={() => navigate(`/request-loan?tab=${eq.itemType}&id=${eq.id}`)}
-              />
-            ))}
-          </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Link to="/request-loan?tab=alat" className="group bg-card rounded-2xl border border-border p-6 hover:border-primary hover:shadow-md transition-all">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <Wrench className="w-6 h-6" />
+            </div>
+            <h3 className="font-semibold text-lg mb-1">Ajukan Pinjam Alat</h3>
+            <p className="text-sm text-muted-foreground">Pinjam kamera, mixer, mikrofon, dan alat lab lainnya.</p>
+            <span className="inline-flex items-center text-sm text-primary font-medium mt-4">Mulai <ArrowRight className="w-4 h-4 ml-1" /></span>
+          </Link>
+          <Link to="/request-loan?tab=bahan" className="group bg-card rounded-2xl border border-border p-6 hover:border-warning hover:shadow-md transition-all">
+            <div className="w-12 h-12 rounded-xl bg-warning/10 text-warning flex items-center justify-center mb-4 group-hover:bg-warning group-hover:text-warning-foreground transition-colors">
+              <Package className="w-6 h-6" />
+            </div>
+            <h3 className="font-semibold text-lg mb-1">Ambil Bahan</h3>
+            <p className="text-sm text-muted-foreground">Komponen elektro, kabel, timah, dan bahan habis pakai.</p>
+            <span className="inline-flex items-center text-sm text-warning font-medium mt-4">Mulai <ArrowRight className="w-4 h-4 ml-1" /></span>
+          </Link>
         </div>
       </>
     );
@@ -252,23 +132,20 @@ export default function Dashboard() {
 
   return (
     <div className="animate-fade-in">
-      {/* Page Header */}
       <div className="page-header">
         <div>
-          <h1 className="section-title">
-            {user?.role === 'admin' ? 'Dashboard Admin' : 
-             user?.role === 'guru' ? 'Dashboard Guru' : 'Dashboard Siswa'}
-          </h1>
+          <h1 className="section-title">Halo, {user?.name?.split(' ')[0]}</h1>
           <p className="text-muted-foreground mt-1">
-            Selamat datang kembali, {user?.name}
+            {user?.role === 'admin' ? 'Ringkasan operasional laboratorium hari ini.'
+              : user?.role === 'guru' ? 'Pantauan peminjaman siswa Anda.'
+              : 'Apa yang ingin kamu lakukan hari ini?'}
           </p>
         </div>
       </div>
 
-      {/* Role-specific content */}
-      {user?.role === 'admin' && renderAdminDashboard()}
-      {user?.role === 'guru' && renderGuruDashboard()}
-      {user?.role === 'siswa' && renderSiswaDashboard()}
+      {user?.role === 'admin' && renderAdmin()}
+      {user?.role === 'guru' && renderGuru()}
+      {user?.role === 'siswa' && renderSiswa()}
     </div>
   );
 }
