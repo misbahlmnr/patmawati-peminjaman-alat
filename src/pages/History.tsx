@@ -4,7 +4,10 @@ import { useData } from '@/contexts/DataContext';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { LoanDetailModal } from '@/components/loans/LoanDetailModal';
 import { Loan, formatDateTime } from '@/types';
-import { Search, Filter, Clock, Eye, Calendar } from 'lucide-react';
+import { Search, Clock, Eye } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DateField } from '@/components/ui/date-field';
+import { Input } from '@/components/ui/input';
 
 export default function History() {
   const { user } = useAuth();
