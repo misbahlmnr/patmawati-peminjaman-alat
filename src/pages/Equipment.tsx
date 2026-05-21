@@ -329,15 +329,14 @@ export default function EquipmentPage() {
 
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="form-input w-auto"
-          >
-            {usedCategories.map(cat => (
-              <option key={cat} value={cat}>{cat === 'all' ? 'Semua Kategori' : cat}</option>
-            ))}
-          </select>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {usedCategories.map(cat => (
+                <SelectItem key={cat} value={cat}>{cat === 'all' ? 'Semua Kategori' : cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center bg-secondary rounded-lg p-1">
