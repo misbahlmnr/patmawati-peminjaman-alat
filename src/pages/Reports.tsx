@@ -29,6 +29,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { DateField } from '@/components/ui/date-field';
 
 type ReportType = 'equipment' | 'loans' | 'users';
 
