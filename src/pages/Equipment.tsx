@@ -167,132 +167,105 @@ export default function EquipmentPage() {
             <div className="text-center text-muted-foreground text-sm mb-6">atau isi form manual</div>
 
             <form onSubmit={handleAddItem} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Nama {isBahan ? 'Bahan' : 'Alat'}</label>
-                <input
-                  type="text" value={form.name}
+              <div className="space-y-1.5">
+                <Label>Nama {isBahan ? 'Bahan' : 'Alat'}</Label>
+                <Input value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder={isBahan ? 'Contoh: Resistor 1/4W' : 'Contoh: Kamera DSLR Canon EOS 80D'}
-                  className="form-input" required
-                />
+                  required />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Kategori</label>
-                <select
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="form-input" required
-                >
-                  <option value="">Pilih kategori</option>
-                  {categoryOptions.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+              <div className="space-y-1.5">
+                <Label>Kategori</Label>
+                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                  <SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
+                  <SelectContent>
+                    {categoryOptions.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
 
               {isBahan ? (
                 <>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Total Stok</label>
-                      <input
-                        type="number" min="1" value={form.stock}
-                        onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                        placeholder="100" className="form-input" required
-                      />
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Total Stok</Label>
+                      <NumberInput value={form.stock ? Number(form.stock) : 0}
+                        onChange={(n) => setForm({ ...form, stock: String(n) })} min={1} />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Sisa</label>
-                      <input
-                        type="number" min="0" max={form.stock || undefined}
-                        value={form.stockRemaining}
-                        onChange={(e) => setForm({ ...form, stockRemaining: e.target.value })}
-                        placeholder="100" className="form-input" required
-                      />
+                    <div className="space-y-1.5">
+                      <Label>Sisa</Label>
+                      <NumberInput value={form.stockRemaining ? Number(form.stockRemaining) : 0}
+                        onChange={(n) => setForm({ ...form, stockRemaining: String(n) })}
+                        min={0} max={form.stock ? Number(form.stock) : undefined} />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Unit</label>
-                      <select
-                        value={form.unit}
-                        onChange={(e) => setForm({ ...form, unit: e.target.value as MaterialUnit })}
-                        className="form-input" required
-                      >
-                        {materialUnits.map(u => <option key={u} value={u}>{u}</option>)}
-                      </select>
+                    <div className="space-y-1.5">
+                      <Label>Unit</Label>
+                      <Select value={form.unit} onValueChange={(v) => setForm({ ...form, unit: v as MaterialUnit })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {materialUnits.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Ambang Stok Menipis (opsional)</label>
-                    <input
-                      type="number" min="0" value={form.minStock}
-                      onChange={(e) => setForm({ ...form, minStock: e.target.value })}
-                      placeholder="20" className="form-input"
-                    />
+                  <div className="space-y-1.5">
+                    <Label>Ambang Stok Menipis (opsional)</Label>
+                    <NumberInput value={form.minStock ? Number(form.minStock) : 0}
+                      onChange={(n) => setForm({ ...form, minStock: String(n) })} min={0} />
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Total Stok</label>
-                      <input
-                        type="number" min="1" value={form.stock}
-                        onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                        placeholder="5" className="form-input" required
-                      />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Total Stok</Label>
+                      <NumberInput value={form.stock ? Number(form.stock) : 0}
+                        onChange={(n) => setForm({ ...form, stock: String(n) })} min={1} />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Tersedia</label>
-                      <input
-                        type="number" min="0" max={form.stock || undefined}
-                        value={form.available}
-                        onChange={(e) => setForm({ ...form, available: e.target.value })}
-                        placeholder="5" className="form-input" required
-                      />
+                    <div className="space-y-1.5">
+                      <Label>Tersedia</Label>
+                      <NumberInput value={form.available ? Number(form.available) : 0}
+                        onChange={(n) => setForm({ ...form, available: String(n) })}
+                        min={0} max={form.stock ? Number(form.stock) : undefined} />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Kondisi</label>
-                      <select
-                        value={form.condition}
-                        onChange={(e) => setForm({ ...form, condition: e.target.value as Equipment['condition'] })}
-                        className="form-input" required
-                      >
-                        <option value="baik">Baik</option>
-                        <option value="rusak_ringan">Rusak Ringan</option>
-                        <option value="rusak_berat">Rusak Berat</option>
-                      </select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Kondisi</Label>
+                      <Select value={form.condition} onValueChange={(v) => setForm({ ...form, condition: v as Equipment['condition'] })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="baik">Baik</SelectItem>
+                          <SelectItem value="rusak_ringan">Rusak Ringan</SelectItem>
+                          <SelectItem value="rusak_berat">Rusak Berat</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Lokasi Rak</label>
-                      <input
-                        type="text" value={form.location}
+                    <div className="space-y-1.5">
+                      <Label>Lokasi Rak</Label>
+                      <Input value={form.location}
                         onChange={(e) => setForm({ ...form, location: e.target.value })}
-                        placeholder="Rak A1" className="form-input" required
-                      />
+                        placeholder="Rak A1" required />
                     </div>
                   </div>
                 </>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Deskripsi (Opsional)</label>
-                <textarea
-                  value={form.description}
+              <div className="space-y-1.5">
+                <Label>Deskripsi (Opsional)</Label>
+                <Textarea value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="Deskripsi singkat..."
-                  className="form-input min-h-[80px] resize-none"
-                />
+                  className="min-h-[80px] resize-none" />
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowAddModal(false)} className="btn-outline flex-1">Batal</button>
-                <button type="submit" className="btn-primary flex-1">
+                <Button type="button" variant="outline" onClick={() => setShowAddModal(false)} className="flex-1">Batal</Button>
+                <Button type="submit" className="flex-1">
                   <Plus className="w-4 h-4 mr-2" />
                   Tambah {isBahan ? 'Bahan' : 'Alat'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
