@@ -3,8 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { usersData } from '@/data/mockData';
-import { Equipment } from '@/types';
-import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, User, Wrench, Package, Info } from 'lucide-react';
+import { Equipment, BorrowScope } from '@/types';
+import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, User, Wrench, Package, Info, MapPin, CreditCard, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DateField } from '@/components/ui/date-field';
 import { TimeField } from '@/components/ui/time-field';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface CartItem {
   equipment: Equipment;
