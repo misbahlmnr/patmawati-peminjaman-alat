@@ -116,13 +116,13 @@ export default function Loans() {
                 className="btn-outline flex-1 text-destructive border-destructive hover:bg-destructive/10">
                 <X className="w-4 h-4 mr-2" /> Tolak
               </button>
-              <button onClick={() => handleApprove(detail)} className="btn-primary flex-1">
+              <button onClick={() => handleApproveClick(detail)} className="btn-primary flex-1">
                 <Check className="w-4 h-4 mr-2" /> Setujui
               </button>
             </div>
-          ) : detail.returnRequestedAt && (detail.status === 'dipinjam' || detail.status === 'terlambat') ? (
-            <button onClick={() => handleConfirmReturn(detail)} className="btn-primary w-full">
-              <Check className="w-4 h-4 mr-2" /> Konfirmasi Pengembalian
+          ) : detail.status === 'menunggu_inspeksi' || (detail.returnRequestedAt && (detail.status === 'dipinjam' || detail.status === 'terlambat')) ? (
+            <button onClick={() => handleReturnClick(detail)} className="btn-primary w-full">
+              {detail.borrowScope === 'bawa_pulang' ? <><SearchIcon className="w-4 h-4 mr-2" /> Inspeksi Pengembalian</> : <><Check className="w-4 h-4 mr-2" /> Konfirmasi Pengembalian</>}
             </button>
           ) : undefined
         ) : undefined}
