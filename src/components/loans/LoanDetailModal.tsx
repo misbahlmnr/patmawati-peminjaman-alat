@@ -123,6 +123,66 @@ export function LoanDetailModal({ loan, onClose, footer }: Props) {
             </div>
           )}
 
+          {loan.collateral && loan.collateral.status !== 'tidak_diperlukan' && (
+            <div className="bg-secondary/50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <CreditCard className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Status Jaminan Kartu Pelajar</span>
+              </div>
+              <div className="ml-6 space-y-1 text-sm">
+                <CollateralStatusBadge collateral={loan.collateral} />
+                {loan.collateral.heldAt && (
+                  <p className="text-xs text-muted-foreground">Ditahan: {new Date(loan.collateral.heldAt).toLocaleString('id-ID')}</p>
+                )}
+                {loan.collateral.returnedAt && (
+                  <p className="text-xs text-muted-foreground">Dikembalikan: {new Date(loan.collateral.returnedAt).toLocaleString('id-ID')}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {loan.inspection && loan.inspection.status !== 'belum' && (
+            <div className={cn('rounded-lg p-4',
+              loan.inspection.status === 'lengkap' ? 'bg-success/10' : 'bg-destructive/10'
+            )}>
+              <div className="flex items-center gap-2 mb-2">
+                <Search className="w-4 h-4" />
+                <span className="text-sm font-medium">Hasil Inspeksi</span>
+              </div>
+              <div className="ml-6 space-y-1 text-sm">
+                <p className="font-medium capitalize">{loan.inspection.status.replace('_', ' ')}</p>
+                {loan.inspection.missingItems && <p className="text-xs"><span className="text-muted-foreground">Item kurang:</span> {loan.inspection.missingItems}</p>}
+                {loan.inspection.damageDescription && <p className="text-xs"><span className="text-muted-foreground">Kerusakan:</span> {loan.inspection.damageDescription}</p>}
+                {loan.inspection.notes && <p className="text-xs text-muted-foreground italic">{loan.inspection.notes}</p>}
+              </div>
+            </div>
+          )}
+
+          {loan.compensation?.required && (
+            <div className={cn('rounded-lg p-4 border',
+              loan.compensation.status === 'selesai' ? 'bg-success/10 border-success/30' : 'bg-destructive/10 border-destructive/30'
+            )}>
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="w-4 h-4" />
+                <span className="text-sm font-medium">Kompensasi / Ganti Rugi</span>
+                <span className={cn('ml-auto text-xs font-medium px-2 py-0.5 rounded',
+                  loan.compensation.status === 'selesai' ? 'bg-success text-success-foreground' : 'bg-destructive text-destructive-foreground'
+                )}>
+                  {loan.compensation.status === 'selesai' ? 'Selesai' : 'Pending'}
+                </span>
+              </div>
+              <div className="ml-6 space-y-1 text-sm">
+                {loan.compensation.amount !== undefined && (
+                  <p>Nominal: <strong>Rp {loan.compensation.amount.toLocaleString('id-ID')}</strong></p>
+                )}
+                {loan.compensation.description && <p className="text-xs">{loan.compensation.description}</p>}
+                {loan.compensation.status === 'pending' && (
+                  <p className="text-xs text-destructive font-medium mt-1">⚠ Kartu pelajar masih ditahan hingga kompensasi selesai.</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {!isBahan && (
             <div>
               <p className="text-sm font-medium mb-3">Timeline Status</p>
