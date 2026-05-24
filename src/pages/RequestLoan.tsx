@@ -41,6 +41,8 @@ export default function RequestLoan() {
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
   const [teacherId, setTeacherId] = useState('');
+  const [borrowScope, setBorrowScope] = useState<BorrowScope>('dalam_lab');
+  const [agreeCollateral, setAgreeCollateral] = useState(false);
   const [showSuccess, setShowSuccess] = useState<string | null>(null);
 
   // Preselect via ?id=
