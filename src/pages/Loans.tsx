@@ -272,11 +272,11 @@ export default function Loans() {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">
-        {(['all', 'diminta', 'disetujui', 'dipinjam', 'terlambat', 'dikembalikan', 'ditolak'] as const).map(s => (
+        {(['all', 'diminta', 'disetujui', 'dipinjam', 'menunggu_inspeksi', 'terlambat', 'dikembalikan', 'ditolak'] as const).map(s => (
           <button key={s} onClick={() => setStatusFilter(s)}
             className={cn('px-3 py-1.5 rounded-lg text-sm font-medium',
               statusFilter === s ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:bg-secondary/80')}>
-            {s === 'all' ? 'Semua' : s.charAt(0).toUpperCase() + s.slice(1)} ({counts[s as keyof typeof counts]})
+            {s === 'all' ? 'Semua' : s === 'menunggu_inspeksi' ? 'Inspeksi' : s.charAt(0).toUpperCase() + s.slice(1)} ({counts[s as keyof typeof counts]})
           </button>
         ))}
       </div>
