@@ -46,6 +46,7 @@ const App = () => (
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/users" element={<Users />} />
               <Route path="/reports" element={<Reports />} />
+              <Route path="/collateral" element={<Collateral />} />
               <Route path="/settings" element={<Dashboard />} />
             </Route>
 
