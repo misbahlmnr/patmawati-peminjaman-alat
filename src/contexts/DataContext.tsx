@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { Equipment, Loan, Notification, ItemType, isLoanOverdue } from '@/types';
+import { Equipment, Loan, Notification, ItemType, BorrowScope, LoanInspection, isLoanOverdue } from '@/types';
 import {
   equipmentData as seedEquipment,
   loansData as seedLoans,
@@ -21,6 +21,16 @@ interface NewLoanInput {
   borrowTime?: string;
   dueDate?: string;
   dueTime?: string;
+  borrowScope?: BorrowScope;
+}
+
+export interface InspectionResult {
+  result: 'lengkap' | 'tidak_lengkap' | 'rusak';
+  notes?: string;
+  missingItems?: string;
+  damageDescription?: string;
+  compensationAmount?: number;
+  compensationDescription?: string;
 }
 
 interface DataContextType {
