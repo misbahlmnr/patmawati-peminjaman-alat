@@ -95,6 +95,10 @@ export interface Loan {
   returnRequestedAt?: string;
   notes?: string;
   rejectionReason?: string;
+  borrowScope?: BorrowScope;
+  collateral?: LoanCollateral;
+  inspection?: LoanInspection;
+  compensation?: LoanCompensation;
 }
 
 export interface Notification {
