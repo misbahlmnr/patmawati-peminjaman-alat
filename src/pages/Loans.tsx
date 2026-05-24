@@ -310,6 +310,16 @@ export default function Loans() {
                     <td className="px-4 py-3 text-sm">
                       <p className="font-medium">{loan.equipmentName}</p>
                       <p className="text-xs text-muted-foreground">{loan.quantity} unit</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {loan.borrowScope && (
+                          <span className={cn('inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded',
+                            loan.borrowScope === 'bawa_pulang' ? 'bg-warning/15 text-warning' : 'bg-secondary text-muted-foreground')}>
+                            <MapPin className="w-2.5 h-2.5" />
+                            {loan.borrowScope === 'bawa_pulang' ? 'Bawa Pulang' : 'Di Lab'}
+                          </span>
+                        )}
+                        <CollateralStatusBadge collateral={loan.collateral} />
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <p>{loan.borrowDate && loan.borrowTime ? formatDateTime(loan.borrowDate, loan.borrowTime) : formatDateTime(loan.requestDate, loan.requestTime)}</p>
