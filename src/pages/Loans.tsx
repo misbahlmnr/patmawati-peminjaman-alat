@@ -128,6 +128,112 @@ export default function Loans() {
         ) : undefined}
       />
 
+      {approveFor && (
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-2xl p-6 max-w-md w-full animate-scale-in">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Konfirmasi Setujui (Bawa Pulang)</h3>
+              <button onClick={() => setApproveFor(null)}><X className="w-5 h-5 text-muted-foreground" /></button>
+            </div>
+            <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 mb-4 flex items-start gap-2">
+              <CreditCard className="w-4 h-4 text-warning mt-0.5" />
+              <p className="text-sm">
+                Pastikan <strong>kartu pelajar</strong> milik <strong>{approveFor.borrowerName}</strong> telah Anda terima sebelum melepas alat <strong>{approveFor.equipmentName}</strong>.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setApproveFor(null)} className="btn-outline flex-1">Batal</button>
+              <button onClick={confirmApprove} className="btn-primary flex-1">
+                <Check className="w-4 h-4 mr-2" /> Kartu Diterima — Setujui
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {inspectFor && (
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-card rounded-2xl p-6 max-w-lg w-full my-8 animate-scale-in">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold flex items-center gap-2"><SearchIcon className="w-5 h-5" /> Inspeksi Pengembalian</h3>
+              <button onClick={() => setInspectFor(null)}><X className="w-5 h-5 text-muted-foreground" /></button>
+            </div>
+            <div className="bg-secondary/50 rounded-lg p-3 mb-4 text-sm">
+              <p className="font-medium">{inspectFor.equipmentName}</p>
+              <p className="text-xs text-muted-foreground">{inspectFor.borrowerName} • {inspectFor.quantity} unit</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <Label className="mb-2 block">Hasil Inspeksi</Label>
+                <RadioGroup value={inspResult} onValueChange={(v) => setInspResult(v as typeof inspResult)} className="gap-2">
+                  {[
+                    { v: 'lengkap', l: 'Lengkap & Baik', d: 'Alat utuh, kartu pelajar dikembalikan' },
+                    { v: 'tidak_lengkap', l: 'Tidak Lengkap', d: 'Ada komponen yang hilang' },
+                    { v: 'rusak', l: 'Rusak', d: 'Alat dikembalikan dalam kondisi rusak' },
+                  ].map(opt => (
+                    <label key={opt.v} className={cn('flex items-start gap-2 p-2.5 rounded-lg border cursor-pointer',
+                      inspResult === opt.v ? (opt.v === 'lengkap' ? 'border-success bg-success/5' : 'border-destructive bg-destructive/5') : 'border-border'
+                    )}>
+                      <RadioGroupItem value={opt.v} className="mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-medium">{opt.l}</p>
+                        <p className="text-xs text-muted-foreground">{opt.d}</p>
+                      </div>
+                    </label>
+                  ))}
+                </RadioGroup>
+              </div>
+
+              <div>
+                <Label className="mb-1.5 block">Catatan inspeksi</Label>
+                <Textarea value={inspNotes} onChange={e => setInspNotes(e.target.value)}
+                  placeholder="Catatan tambahan..." className="min-h-[64px] resize-none" />
+              </div>
+
+              {inspResult === 'tidak_lengkap' && (
+                <div>
+                  <Label className="mb-1.5 block">Item yang kurang</Label>
+                  <Input value={inspMissing} onChange={e => setInspMissing(e.target.value)} placeholder="Mis. Lensa cap, Battery grip" />
+                </div>
+              )}
+              {inspResult === 'rusak' && (
+                <div>
+                  <Label className="mb-1.5 block">Deskripsi kerusakan</Label>
+                  <Input value={inspDamage} onChange={e => setInspDamage(e.target.value)} placeholder="Mis. Layar LCD pecah" />
+                </div>
+              )}
+
+              {inspResult !== 'lengkap' && (
+                <>
+                  <div>
+                    <Label className="mb-1.5 block">Nominal Ganti Rugi (Rp, opsional)</Label>
+                    <Input type="number" value={inspAmount} onChange={e => setInspAmount(e.target.value)} placeholder="0" />
+                  </div>
+                  <div>
+                    <Label className="mb-1.5 block">Instruksi untuk siswa</Label>
+                    <Textarea value={inspCompDesc} onChange={e => setInspCompDesc(e.target.value)}
+                      placeholder="Mis. Ganti unit yang sama atau bayar dalam 7 hari..." className="min-h-[64px] resize-none" />
+                  </div>
+                  <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-start gap-2">
+                    <CreditCard className="w-4 h-4 text-destructive mt-0.5" />
+                    <p className="text-xs text-destructive">Kartu pelajar akan TETAP ditahan hingga kompensasi diselesaikan.</p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setInspectFor(null)} className="btn-outline flex-1">Batal</button>
+              <button onClick={submitInspection} className="btn-primary flex-1">
+                <Check className="w-4 h-4 mr-2" /> Simpan Inspeksi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {rejectFor && (
         <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-2xl p-6 max-w-md w-full animate-scale-in">
