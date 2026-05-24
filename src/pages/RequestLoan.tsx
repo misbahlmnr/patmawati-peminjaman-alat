@@ -90,6 +90,7 @@ export default function RequestLoan() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (tab === 'alat' && borrowScope === 'bawa_pulang' && !agreeCollateral) return;
     const teacher = teachersList.find(t => t.id === teacherId);
     const items = cart.map(i => ({
       equipmentId: i.equipment.id,
@@ -101,13 +102,16 @@ export default function RequestLoan() {
       teacherId,
       teacherName: teacher?.name,
       notes,
-      ...(tab === 'alat' ? { borrowDate, borrowTime, dueDate, dueTime } : {}),
+      ...(tab === 'alat' ? { borrowDate, borrowTime, dueDate, dueTime, borrowScope } : {}),
     }));
     submitLoan(items);
     setShowSuccess(tab === 'bahan'
       ? 'Pengambilan bahan berhasil dicatat! Stok telah diperbarui.'
-      : 'Permintaan peminjaman terkirim! Menunggu verifikasi admin.');
+      : borrowScope === 'bawa_pulang'
+        ? 'Permintaan terkirim! Siapkan kartu pelajar untuk diserahkan saat pengambilan alat.'
+        : 'Permintaan peminjaman terkirim! Menunggu verifikasi admin.');
     setCart([]); setNotes(''); setBorrowDate(''); setBorrowTime(''); setDueDate(''); setDueTime(''); setTeacherId('');
+    setBorrowScope('dalam_lab'); setAgreeCollateral(false);
     setTimeout(() => { setShowSuccess(null); navigate('/my-loans'); }, 2500);
   };
 
