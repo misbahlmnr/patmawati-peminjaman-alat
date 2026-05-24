@@ -15,6 +15,7 @@ import {
   X,
   Wrench,
   Package,
+  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +30,7 @@ const adminMenuItems = [
   { icon: Wrench, label: 'Kelola Alat', path: '/equipment?tab=alat' },
   { icon: Package, label: 'Kelola Bahan', path: '/equipment?tab=bahan' },
   { icon: ClipboardList, label: 'Peminjaman', path: '/loans' },
+  { icon: CreditCard, label: 'Jaminan Kartu', path: '/collateral' },
   { icon: Bell, label: 'Notifikasi', path: '/notifications' },
   { icon: BarChart3, label: 'Laporan', path: '/reports' },
 ];

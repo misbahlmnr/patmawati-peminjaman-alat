@@ -39,8 +39,35 @@ export interface Equipment {
   minStock?: number;            // ambang stok menipis
 }
 
-export type LoanStatus = 'diminta' | 'disetujui' | 'dipinjam' | 'terlambat' | 'dikembalikan' | 'ditolak' | 'diambil';
+export type LoanStatus = 'diminta' | 'disetujui' | 'dipinjam' | 'terlambat' | 'dikembalikan' | 'ditolak' | 'diambil' | 'menunggu_inspeksi';
 export type LoanDurationType = 'jam' | 'harian';
+export type BorrowScope = 'dalam_lab' | 'bawa_pulang';
+
+export interface LoanCollateral {
+  type: 'kartu_pelajar';
+  status: 'tidak_diperlukan' | 'ditahan' | 'dikembalikan';
+  heldAt?: string;
+  returnedAt?: string;
+  heldByAdminId?: string;
+}
+
+export interface LoanInspection {
+  status: 'belum' | 'lengkap' | 'tidak_lengkap' | 'rusak';
+  checkedAt?: string;
+  checkedByAdminId?: string;
+  notes?: string;
+  missingItems?: string;
+  damageDescription?: string;
+}
+
+export interface LoanCompensation {
+  required: boolean;
+  status: 'tidak_perlu' | 'pending' | 'selesai';
+  amount?: number;
+  description?: string;
+  completedAt?: string;
+  completedByAdminId?: string;
+}
 
 export interface Loan {
   id: string;
@@ -68,6 +95,10 @@ export interface Loan {
   returnRequestedAt?: string;
   notes?: string;
   rejectionReason?: string;
+  borrowScope?: BorrowScope;
+  collateral?: LoanCollateral;
+  inspection?: LoanInspection;
+  compensation?: LoanCompensation;
 }
 
 export interface Notification {

@@ -18,6 +18,7 @@ import History from "./pages/History";
 import Notifications from "./pages/Notifications";
 import Users from "./pages/Users";
 import Reports from "./pages/Reports";
+import Collateral from "./pages/Collateral";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/users" element={<Users />} />
               <Route path="/reports" element={<Reports />} />
+              <Route path="/collateral" element={<Collateral />} />
               <Route path="/settings" element={<Dashboard />} />
             </Route>
 

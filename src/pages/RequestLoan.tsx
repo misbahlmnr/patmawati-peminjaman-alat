@@ -3,8 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { usersData } from '@/data/mockData';
-import { Equipment } from '@/types';
-import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, User, Wrench, Package, Info } from 'lucide-react';
+import { Equipment, BorrowScope } from '@/types';
+import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, User, Wrench, Package, Info, MapPin, CreditCard, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DateField } from '@/components/ui/date-field';
 import { TimeField } from '@/components/ui/time-field';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface CartItem {
   equipment: Equipment;
@@ -39,6 +41,8 @@ export default function RequestLoan() {
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
   const [teacherId, setTeacherId] = useState('');
+  const [borrowScope, setBorrowScope] = useState<BorrowScope>('dalam_lab');
+  const [agreeCollateral, setAgreeCollateral] = useState(false);
   const [showSuccess, setShowSuccess] = useState<string | null>(null);
 
   // Preselect via ?id=
@@ -86,6 +90,7 @@ export default function RequestLoan() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (tab === 'alat' && borrowScope === 'bawa_pulang' && !agreeCollateral) return;
     const teacher = teachersList.find(t => t.id === teacherId);
     const items = cart.map(i => ({
       equipmentId: i.equipment.id,
@@ -97,13 +102,16 @@ export default function RequestLoan() {
       teacherId,
       teacherName: teacher?.name,
       notes,
-      ...(tab === 'alat' ? { borrowDate, borrowTime, dueDate, dueTime } : {}),
+      ...(tab === 'alat' ? { borrowDate, borrowTime, dueDate, dueTime, borrowScope } : {}),
     }));
     submitLoan(items);
     setShowSuccess(tab === 'bahan'
       ? 'Pengambilan bahan berhasil dicatat! Stok telah diperbarui.'
-      : 'Permintaan peminjaman terkirim! Menunggu verifikasi admin.');
+      : borrowScope === 'bawa_pulang'
+        ? 'Permintaan terkirim! Siapkan kartu pelajar untuk diserahkan saat pengambilan alat.'
+        : 'Permintaan peminjaman terkirim! Menunggu verifikasi admin.');
     setCart([]); setNotes(''); setBorrowDate(''); setBorrowTime(''); setDueDate(''); setDueTime(''); setTeacherId('');
+    setBorrowScope('dalam_lab'); setAgreeCollateral(false);
     setTimeout(() => { setShowSuccess(null); navigate('/my-loans'); }, 2500);
   };
 
@@ -238,6 +246,41 @@ export default function RequestLoan() {
 
               {!isBahan && (
                 <>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Lokasi Penggunaan</Label>
+                    <RadioGroup value={borrowScope} onValueChange={(v) => setBorrowScope(v as BorrowScope)} className="gap-2">
+                      <label className={cn('flex items-start gap-2 p-2.5 rounded-lg border cursor-pointer', borrowScope === 'dalam_lab' ? 'border-primary bg-primary/5' : 'border-border')}>
+                        <RadioGroupItem value="dalam_lab" className="mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium">Pakai di Lab</p>
+                          <p className="text-xs text-muted-foreground">Alat tidak dibawa keluar. Tanpa jaminan.</p>
+                        </div>
+                      </label>
+                      <label className={cn('flex items-start gap-2 p-2.5 rounded-lg border cursor-pointer', borrowScope === 'bawa_pulang' ? 'border-warning bg-warning/5' : 'border-border')}>
+                        <RadioGroupItem value="bawa_pulang" className="mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium">Bawa Pulang</p>
+                          <p className="text-xs text-muted-foreground">Wajib jaminan kartu pelajar.</p>
+                        </div>
+                      </label>
+                    </RadioGroup>
+                  </div>
+
+                  {borrowScope === 'bawa_pulang' && (
+                    <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 space-y-2">
+                      <div className="flex items-start gap-2">
+                        <CreditCard className="w-4 h-4 text-warning mt-0.5" />
+                        <p className="text-xs text-warning-foreground">
+                          Anda wajib menyerahkan <strong>kartu pelajar</strong> sebagai jaminan. Kartu akan dikembalikan setelah alat dikembalikan dalam keadaan lengkap. Jika ada barang tidak lengkap/rusak, kartu ditahan sampai penggantian selesai.
+                        </p>
+                      </div>
+                      <label className="flex items-start gap-2 cursor-pointer pt-1 border-t border-warning/20">
+                        <Checkbox checked={agreeCollateral} onCheckedChange={(v) => setAgreeCollateral(v === true)} className="mt-0.5" />
+                        <span className="text-xs font-medium">Saya setuju menyerahkan kartu pelajar sebagai jaminan</span>
+                      </label>
+                    </div>
+                  )}
+
                   <div className="space-y-1.5">
                     <Label className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Mulai Pinjam</Label>
                     <DateField value={borrowDate} onChange={setBorrowDate} placeholder="Tanggal mulai" />
@@ -258,7 +301,11 @@ export default function RequestLoan() {
                   className="min-h-[72px] resize-none" required />
               </div>
 
-              <Button type="submit" disabled={cart.length === 0 || !teacherId || (!isBahan && (!borrowDate || !borrowTime || !dueDate || !dueTime))} className="w-full">
+              <Button type="submit" disabled={
+                cart.length === 0 || !teacherId ||
+                (!isBahan && (!borrowDate || !borrowTime || !dueDate || !dueTime)) ||
+                (!isBahan && borrowScope === 'bawa_pulang' && !agreeCollateral)
+              } className="w-full">
                 <Send className="w-4 h-4 mr-2" />
                 {isBahan ? 'Ambil Bahan' : 'Ajukan Peminjaman'}
               </Button>

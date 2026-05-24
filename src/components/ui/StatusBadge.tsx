@@ -14,6 +14,7 @@ const statusConfig: Record<LoanStatus, { label: string; className: string }> = {
   dikembalikan: { label: 'Dikembalikan', className: 'status-returned' },
   ditolak: { label: 'Ditolak', className: 'status-overdue' },
   diambil: { label: 'Diambil', className: 'status-approved' },
+  menunggu_inspeksi: { label: 'Menunggu Inspeksi', className: 'status-requested' },
 };
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
