@@ -186,6 +186,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           dueTime: isBahan ? undefined : merged.dueTime,
           approvalDate: isBahan ? date : undefined,
           approvalTime: isBahan ? time : undefined,
+          borrowScope: isBahan ? undefined : (merged.borrowScope ?? 'dalam_lab'),
+          collateral: !isBahan && merged.borrowScope === 'bawa_pulang'
+            ? { type: 'kartu_pelajar', status: 'tidak_diperlukan' }
+            : undefined,
         };
         next.unshift(loan);
         created.push(loan);
