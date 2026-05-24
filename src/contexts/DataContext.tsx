@@ -47,6 +47,8 @@ interface DataContextType {
   rejectLoan: (id: string, reason: string) => void;
   requestReturn: (id: string, notes?: string) => void;
   confirmReturn: (id: string) => void;
+  inspectReturn: (id: string, result: InspectionResult) => void;
+  completeCompensation: (id: string, note?: string) => void;
   // notifications
   markRead: (id: string) => void;
   markAllRead: (userId: string) => void;
