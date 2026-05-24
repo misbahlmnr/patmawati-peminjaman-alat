@@ -1,20 +1,33 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useData } from '@/contexts/DataContext';
+import { useData, InspectionResult } from '@/contexts/DataContext';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { CollateralStatusBadge } from '@/components/ui/CollateralStatusBadge';
 import { LoanDetailModal } from '@/components/loans/LoanDetailModal';
 import { Loan, LoanStatus, formatDateTime } from '@/types';
-import { Search, FileText, Eye, Check, X, AlertCircle, Download } from 'lucide-react';
+import { Search, FileText, Eye, Check, X, AlertCircle, Download, CreditCard, Search as SearchIcon, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 
 export default function Loans() {
   const { user } = useAuth();
-  const { loans, approveLoan, rejectLoan, confirmReturn } = useData();
+  const { loans, approveLoan, rejectLoan, confirmReturn, inspectReturn } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<LoanStatus | 'all'>('all');
   const [detail, setDetail] = useState<Loan | null>(null);
   const [rejectFor, setRejectFor] = useState<Loan | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [approveFor, setApproveFor] = useState<Loan | null>(null);
+  const [inspectFor, setInspectFor] = useState<Loan | null>(null);
+  const [inspResult, setInspResult] = useState<'lengkap' | 'tidak_lengkap' | 'rusak'>('lengkap');
+  const [inspNotes, setInspNotes] = useState('');
+  const [inspMissing, setInspMissing] = useState('');
+  const [inspDamage, setInspDamage] = useState('');
+  const [inspAmount, setInspAmount] = useState('');
+  const [inspCompDesc, setInspCompDesc] = useState('');
   const [toast, setToast] = useState('');
 
   const filtered = useMemo(() => loans
@@ -33,6 +46,7 @@ export default function Loans() {
       disetujui: base.filter(l => l.status === 'disetujui').length,
       dipinjam: base.filter(l => l.status === 'dipinjam').length,
       terlambat: base.filter(l => l.status === 'terlambat').length,
+      menunggu_inspeksi: base.filter(l => l.status === 'menunggu_inspeksi').length,
       dikembalikan: base.filter(l => l.status === 'dikembalikan').length,
       ditolak: base.filter(l => l.status === 'ditolak').length,
       diambil: 0,
@@ -41,13 +55,47 @@ export default function Loans() {
 
   const showToast = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2500); };
 
-  const handleApprove = (l: Loan) => { approveLoan(l.id); setDetail(null); showToast('Peminjaman disetujui & stok diperbarui'); };
-  const handleConfirmReturn = (l: Loan) => { confirmReturn(l.id); setDetail(null); showToast('Pengembalian dikonfirmasi'); };
+  const handleApproveClick = (l: Loan) => {
+    if (l.borrowScope === 'bawa_pulang') {
+      setApproveFor(l); setDetail(null);
+    } else {
+      approveLoan(l.id); setDetail(null); showToast('Peminjaman disetujui & stok diperbarui');
+    }
+  };
+  const confirmApprove = () => {
+    if (!approveFor) return;
+    approveLoan(approveFor.id);
+    showToast('Disetujui. Kartu pelajar tercatat ditahan.');
+    setApproveFor(null);
+  };
+  const handleReturnClick = (l: Loan) => {
+    if (l.borrowScope === 'bawa_pulang') {
+      setInspectFor(l); setDetail(null);
+      setInspResult('lengkap'); setInspNotes(''); setInspMissing(''); setInspDamage(''); setInspAmount(''); setInspCompDesc('');
+    } else {
+      confirmReturn(l.id); setDetail(null); showToast('Pengembalian dikonfirmasi');
+    }
+  };
+  const submitInspection = () => {
+    if (!inspectFor) return;
+    const payload: InspectionResult = {
+      result: inspResult,
+      notes: inspNotes || undefined,
+      missingItems: inspMissing || undefined,
+      damageDescription: inspDamage || undefined,
+      compensationAmount: inspAmount ? Number(inspAmount) : undefined,
+      compensationDescription: inspCompDesc || undefined,
+    };
+    inspectReturn(inspectFor.id, payload);
+    setInspectFor(null);
+    showToast(inspResult === 'lengkap' ? 'Pengembalian lengkap — kartu dikembalikan' : 'Pengembalian dicatat — kartu tetap ditahan');
+  };
   const handleReject = () => {
     if (!rejectFor || !rejectReason.trim()) return;
     rejectLoan(rejectFor.id, rejectReason);
     setRejectFor(null); setRejectReason(''); showToast('Peminjaman ditolak');
   };
+
 
   return (
     <div className="animate-fade-in">
