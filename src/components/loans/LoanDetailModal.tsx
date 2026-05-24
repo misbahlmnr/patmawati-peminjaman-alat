@@ -1,6 +1,7 @@
 import { Loan, formatDateTime } from '@/types';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { X, Package, User, Calendar, Clock, FileText, CheckCircle2, AlertCircle, Wrench } from 'lucide-react';
+import { CollateralStatusBadge } from '@/components/ui/CollateralStatusBadge';
+import { X, Package, User, Calendar, Clock, FileText, CheckCircle2, AlertCircle, Wrench, CreditCard, MapPin, Search, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Props {
