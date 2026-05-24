@@ -237,22 +237,40 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const approveLoan = useCallback((id: string) => {
     const { date, time } = nowParts();
+    const nowIso = new Date().toISOString();
     setLoans(prev => prev.map(l => {
       if (l.id !== id) return l;
-      // kurangi stok alat saat disetujui
       setEquipment(eq => eq.map(e =>
         e.id === l.equipmentId ? { ...e, available: Math.max(0, e.available - l.quantity) } : e
       ));
+      const isBawaPulang = l.borrowScope === 'bawa_pulang';
       pushNotification({
         userId: l.borrowerId,
         title: 'Permintaan Disetujui',
-        message: `Peminjaman ${l.equipmentName} telah disetujui. Silakan ambil di lab.`,
+        message: `Peminjaman ${l.equipmentName} telah disetujui. ${isBawaPulang ? 'Serahkan kartu pelajar saat mengambil alat.' : 'Silakan ambil di lab.'}`,
         type: 'success',
         loanId: l.id,
       });
-      return { ...l, status: 'dipinjam', approvalDate: date, approvalTime: time };
+      if (isBawaPulang) {
+        pushNotification({
+          userId: l.borrowerId,
+          title: 'Kartu Pelajar Ditahan',
+          message: `Kartu pelajar Anda ditahan sebagai jaminan peminjaman ${l.equipmentName}.`,
+          type: 'warning',
+          loanId: l.id,
+        });
+      }
+      return {
+        ...l,
+        status: 'dipinjam',
+        approvalDate: date,
+        approvalTime: time,
+        collateral: isBawaPulang
+          ? { type: 'kartu_pelajar', status: 'ditahan', heldAt: nowIso, heldByAdminId: adminId }
+          : l.collateral,
+      };
     }));
-  }, [pushNotification]);
+  }, [pushNotification, adminId]);
 
   const rejectLoan = useCallback((id: string, reason: string) => {
     setLoans(prev => prev.map(l => {
@@ -271,14 +289,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const requestReturn = useCallback((id: string, notes?: string) => {
     setLoans(prev => prev.map(l => {
       if (l.id !== id) return l;
+      const needsInspection = l.borrowScope === 'bawa_pulang';
       pushNotification({
         userId: adminId,
-        title: 'Permintaan Pengembalian',
-        message: `${l.borrowerName} mengajukan pengembalian ${l.equipmentName}.`,
+        title: needsInspection ? 'Pengembalian Menunggu Inspeksi' : 'Permintaan Pengembalian',
+        message: `${l.borrowerName} mengajukan pengembalian ${l.equipmentName}${needsInspection ? ' (perlu inspeksi)' : ''}.`,
         type: 'info',
         loanId: l.id,
       });
-      return { ...l, returnRequestedAt: new Date().toISOString(), notes: notes ? `${l.notes ?? ''}\nPengembalian: ${notes}` : l.notes };
+      return {
+        ...l,
+        status: needsInspection ? 'menunggu_inspeksi' : l.status,
+        returnRequestedAt: new Date().toISOString(),
+        notes: notes ? `${l.notes ?? ''}\nPengembalian: ${notes}` : l.notes,
+      };
     }));
   }, [adminId, pushNotification]);
 
@@ -286,7 +310,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const { date, time } = nowParts();
     setLoans(prev => prev.map(l => {
       if (l.id !== id) return l;
-      // kembalikan stok alat
       setEquipment(eq => eq.map(e =>
         e.id === l.equipmentId ? { ...e, available: Math.min(e.stock, e.available + l.quantity) } : e
       ));
@@ -300,6 +323,97 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       return { ...l, status: 'dikembalikan', returnDate: date, returnTime: time };
     }));
   }, [pushNotification]);
+
+  const inspectReturn = useCallback((id: string, r: InspectionResult) => {
+    const { date, time } = nowParts();
+    const nowIso = new Date().toISOString();
+    setLoans(prev => prev.map(l => {
+      if (l.id !== id) return l;
+      const isOk = r.result === 'lengkap';
+      // Return stock either way — equipment is back physically
+      setEquipment(eq => eq.map(e =>
+        e.id === l.equipmentId ? { ...e, available: Math.min(e.stock, e.available + l.quantity) } : e
+      ));
+      const inspection: LoanInspection = {
+        status: r.result,
+        checkedAt: nowIso,
+        checkedByAdminId: adminId,
+        notes: r.notes,
+        missingItems: r.missingItems,
+        damageDescription: r.damageDescription,
+      };
+      const compensation = isOk
+        ? { required: false, status: 'tidak_perlu' as const }
+        : {
+            required: true,
+            status: 'pending' as const,
+            amount: r.compensationAmount,
+            description: r.compensationDescription,
+          };
+      const collateral = isOk
+        ? { type: 'kartu_pelajar' as const, status: 'dikembalikan' as const, heldAt: l.collateral?.heldAt, returnedAt: nowIso, heldByAdminId: l.collateral?.heldByAdminId }
+        : l.collateral; // tetap ditahan
+
+      if (isOk) {
+        pushNotification({
+          userId: l.borrowerId,
+          title: 'Pengembalian Selesai',
+          message: `${l.equipmentName} dikembalikan lengkap. Kartu pelajar dapat diambil di lab.`,
+          type: 'success',
+          loanId: l.id,
+        });
+      } else {
+        pushNotification({
+          userId: l.borrowerId,
+          title: 'Pengembalian Tidak Lengkap',
+          message: `${l.equipmentName}: ${r.result === 'rusak' ? 'kerusakan' : 'tidak lengkap'} — ${r.missingItems || r.damageDescription || 'lihat detail'}. Kartu pelajar masih ditahan sampai kompensasi selesai.`,
+          type: 'error',
+          loanId: l.id,
+        });
+      }
+      return {
+        ...l,
+        status: 'dikembalikan',
+        returnDate: date,
+        returnTime: time,
+        inspection,
+        compensation,
+        collateral,
+      };
+    }));
+  }, [adminId, pushNotification]);
+
+  const completeCompensation = useCallback((id: string, note?: string) => {
+    const nowIso = new Date().toISOString();
+    setLoans(prev => prev.map(l => {
+      if (l.id !== id) return l;
+      pushNotification({
+        userId: l.borrowerId,
+        title: 'Kartu Pelajar Dikembalikan',
+        message: `Kompensasi untuk ${l.equipmentName} selesai. Silakan ambil kartu pelajar Anda di lab.`,
+        type: 'success',
+        loanId: l.id,
+      });
+      return {
+        ...l,
+        compensation: {
+          ...(l.compensation ?? { required: true, status: 'pending' as const }),
+          status: 'selesai',
+          completedAt: nowIso,
+          completedByAdminId: adminId,
+          description: note ?? l.compensation?.description,
+        },
+        collateral: {
+          type: 'kartu_pelajar',
+          status: 'dikembalikan',
+          heldAt: l.collateral?.heldAt,
+          heldByAdminId: l.collateral?.heldByAdminId,
+          returnedAt: nowIso,
+        },
+      };
+    }));
+  }, [adminId, pushNotification]);
+
 
   const markRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
