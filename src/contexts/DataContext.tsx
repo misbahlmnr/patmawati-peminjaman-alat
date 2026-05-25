@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { Equipment, Loan, Notification, ItemType, BorrowScope, LoanInspection, isLoanOverdue } from '@/types';
+import { Equipment, Loan, Notification, ItemType, BorrowScope, LoanInspection, JadwalPraktikum, SchedulePriority, PRIORITY_SCORE, isLoanOverdue } from '@/types';
 import {
   equipmentData as seedEquipment,
   loansData as seedLoans,
   notificationsData as seedNotifications,
+  schedulesData as seedSchedules,
   usersData,
 } from '@/data/mockData';
 
@@ -22,6 +23,7 @@ interface NewLoanInput {
   dueDate?: string;
   dueTime?: string;
   borrowScope?: BorrowScope;
+  scheduleId?: string;
 }
 
 export interface InspectionResult {
@@ -37,10 +39,18 @@ interface DataContextType {
   equipment: Equipment[];
   loans: Loan[];
   notifications: Notification[];
+  schedules: JadwalPraktikum[];
   // equipment
   addEquipment: (eq: Equipment) => void;
   updateEquipment: (id: string, patch: Partial<Equipment>) => void;
   deleteEquipment: (id: string) => void;
+  // schedules
+  addSchedule: (s: JadwalPraktikum) => void;
+  updateSchedule: (id: string, patch: Partial<JadwalPraktikum>) => void;
+  deleteSchedule: (id: string) => void;
+  getSchedulesForClass: (className: string) => JadwalPraktikum[];
+  calculateReservedQty: (equipmentId: string, date: string) => number;
+  getAvailableForBooking: (equipmentId: string, date: string) => number;
   // loans
   submitLoan: (input: NewLoanInput[] | NewLoanInput, shared?: Partial<NewLoanInput>) => Loan[];
   approveLoan: (id: string) => void;
@@ -63,6 +73,7 @@ const LS = {
   eq: 'lab.equipment.v1',
   loan: 'lab.loans.v1',
   notif: 'lab.notifications.v1',
+  sched: 'lab.schedules.v1',
 };
 
 function load<T>(key: string, fallback: T): T {
@@ -87,10 +98,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [equipment, setEquipment] = useState<Equipment[]>(() => load(LS.eq, seedEquipment));
   const [loans, setLoans] = useState<Loan[]>(() => load(LS.loan, seedLoans));
   const [notifications, setNotifications] = useState<Notification[]>(() => load(LS.notif, seedNotifications));
+  const [schedules, setSchedules] = useState<JadwalPraktikum[]>(() => load(LS.sched, seedSchedules));
 
   useEffect(() => localStorage.setItem(LS.eq, JSON.stringify(equipment)), [equipment]);
   useEffect(() => localStorage.setItem(LS.loan, JSON.stringify(loans)), [loans]);
   useEffect(() => localStorage.setItem(LS.notif, JSON.stringify(notifications)), [notifications]);
+  useEffect(() => localStorage.setItem(LS.sched, JSON.stringify(schedules)), [schedules]);
 
   const adminId = useMemo(() => usersData.find(u => u.role === 'admin')?.id ?? '1', []);
 
