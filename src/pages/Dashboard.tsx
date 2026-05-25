@@ -97,8 +97,13 @@ export default function Dashboard() {
   const renderSiswa = () => {
     const my = loans.filter(l => l.borrowerId === user?.id);
     const myActive = my.filter(l => l.status === 'dipinjam' || l.status === 'disetujui' || l.status === 'terlambat');
-    const myPending = my.filter(l => l.status === 'diminta');
+    const myPending = my.filter(l => l.status === 'diminta' || l.status === 'antrian');
+    const myPendingComp = my.filter(l => l.compensation?.status === 'pending');
     const unread = notifications.filter(n => n.userId === user?.id && !n.read);
+    const upcoming = user?.class ? getSchedulesForClass(user.class)
+      .filter(s => s.tanggal >= new Date().toISOString().slice(0, 10))
+      .sort((a, b) => (a.tanggal + a.jamMulai).localeCompare(b.tanggal + b.jamMulai))
+      .slice(0, 3) : [];
 
     return (
       <>
@@ -137,6 +142,35 @@ export default function Dashboard() {
             <span className="inline-flex items-center text-sm text-warning font-medium mt-4">Mulai <ArrowRight className="w-4 h-4 ml-1" /></span>
           </Link>
         </div>
+        {myPendingComp.length > 0 && (
+          <div className="mt-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3">
+            <CreditCard className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-medium">Kompensasi pending</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Selesaikan kompensasi agar kartu pelajar Anda dapat diambil.</p>
+            </div>
+            <Button asChild variant="outline" size="sm"><Link to="/my-loans">Lihat</Link></Button>
+          </div>
+        )}
+
+        {upcoming.length > 0 && (
+          <div className="mt-6 bg-card rounded-2xl border border-border p-6">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><CalendarDays className="w-5 h-5 text-primary" /> Jadwal Praktikum Terdekat</h2>
+            <ul className="space-y-2">
+              {upcoming.map(s => (
+                <li key={s.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-secondary/40">
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{s.title}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(s.tanggal).toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short' })} • {s.jamMulai}-{s.jamSelesai} {s.ruangan ? `• ${s.ruangan}` : ''}</p>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${s.priority === 'lomba' ? 'bg-destructive/15 text-destructive' : s.priority === 'tinggi' ? 'bg-warning/15 text-warning' : 'bg-secondary text-muted-foreground'}`}>
+                    {s.priority === 'lomba' ? 'Lomba' : s.priority === 'tinggi' ? 'Tinggi' : 'Normal'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </>
     );
   };
