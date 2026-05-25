@@ -39,7 +39,41 @@ export interface Equipment {
   minStock?: number;            // ambang stok menipis
 }
 
-export type LoanStatus = 'diminta' | 'disetujui' | 'dipinjam' | 'terlambat' | 'dikembalikan' | 'ditolak' | 'diambil' | 'menunggu_inspeksi';
+export type LoanStatus = 'diminta' | 'disetujui' | 'dipinjam' | 'terlambat' | 'dikembalikan' | 'ditolak' | 'diambil' | 'menunggu_inspeksi' | 'antrian';
+
+export type SchedulePriority = 'normal' | 'tinggi' | 'lomba';
+export type ScheduleStatus = 'draft' | 'aktif' | 'selesai' | 'dibatalkan';
+
+export interface ScheduleRequiredEquipment {
+  equipmentId: string;
+  equipmentName: string;
+  quantity: number;
+}
+
+export interface JadwalPraktikum {
+  id: string;
+  title: string;
+  mataKuliah: string;
+  jurusan: string;
+  kelas: string;
+  tanggal: string;       // YYYY-MM-DD
+  jamMulai: string;      // HH:mm
+  jamSelesai: string;    // HH:mm
+  ruangan?: string;
+  guruId: string;
+  guruName: string;
+  priority: SchedulePriority;
+  status: ScheduleStatus;
+  requiredEquipment?: ScheduleRequiredEquipment[];
+  notes?: string;
+  createdAt: string;
+}
+
+export const PRIORITY_SCORE: Record<SchedulePriority, number> = {
+  normal: 40,
+  tinggi: 70,
+  lomba: 100,
+};
 export type LoanDurationType = 'jam' | 'harian';
 export type BorrowScope = 'dalam_lab' | 'bawa_pulang';
 
@@ -99,6 +133,9 @@ export interface Loan {
   collateral?: LoanCollateral;
   inspection?: LoanInspection;
   compensation?: LoanCompensation;
+  scheduleId?: string;
+  scheduleTitle?: string;
+  schedulePriority?: SchedulePriority;
 }
 
 export interface Notification {
