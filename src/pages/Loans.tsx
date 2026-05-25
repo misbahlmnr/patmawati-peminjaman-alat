@@ -43,6 +43,7 @@ export default function Loans() {
     return {
       all: base.length,
       diminta: base.filter(l => l.status === 'diminta').length,
+      antrian: base.filter(l => l.status === 'antrian').length,
       disetujui: base.filter(l => l.status === 'disetujui').length,
       dipinjam: base.filter(l => l.status === 'dipinjam').length,
       terlambat: base.filter(l => l.status === 'terlambat').length,
@@ -272,7 +273,7 @@ export default function Loans() {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">
-        {(['all', 'diminta', 'disetujui', 'dipinjam', 'menunggu_inspeksi', 'terlambat', 'dikembalikan', 'ditolak'] as const).map(s => (
+        {(['all', 'diminta', 'antrian', 'disetujui', 'dipinjam', 'menunggu_inspeksi', 'terlambat', 'dikembalikan', 'ditolak'] as const).map(s => (
           <button key={s} onClick={() => setStatusFilter(s)}
             className={cn('px-3 py-1.5 rounded-lg text-sm font-medium',
               statusFilter === s ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:bg-secondary/80')}>
@@ -318,8 +319,19 @@ export default function Loans() {
                             {loan.borrowScope === 'bawa_pulang' ? 'Bawa Pulang' : 'Di Lab'}
                           </span>
                         )}
+                        {loan.schedulePriority && (
+                          <span className={cn('inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-medium',
+                            loan.schedulePriority === 'lomba' ? 'bg-destructive/15 text-destructive' :
+                            loan.schedulePriority === 'tinggi' ? 'bg-warning/15 text-warning' :
+                            'bg-secondary text-muted-foreground')}>
+                            {loan.schedulePriority === 'lomba' ? '🏆 Lomba' : loan.schedulePriority === 'tinggi' ? 'Tinggi' : 'Normal'}
+                          </span>
+                        )}
                         <CollateralStatusBadge collateral={loan.collateral} />
                       </div>
+                      {loan.scheduleTitle && (
+                        <p className="text-[10px] text-muted-foreground mt-1 italic truncate max-w-[200px]">📅 {loan.scheduleTitle}</p>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <p>{loan.borrowDate && loan.borrowTime ? formatDateTime(loan.borrowDate, loan.borrowTime) : formatDateTime(loan.requestDate, loan.requestTime)}</p>
