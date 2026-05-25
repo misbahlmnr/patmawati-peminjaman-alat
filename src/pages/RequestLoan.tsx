@@ -112,7 +112,7 @@ export default function RequestLoan() {
       teacherId,
       teacherName: teacher?.name,
       notes,
-      ...(tab === 'alat' ? { borrowDate, borrowTime, dueDate, dueTime, borrowScope } : {}),
+      ...(tab === 'alat' ? { borrowDate, borrowTime, dueDate, dueTime, borrowScope, scheduleId } : {}),
     }));
     submitLoan(items);
     setShowSuccess(tab === 'bahan'
@@ -121,7 +121,7 @@ export default function RequestLoan() {
         ? 'Permintaan terkirim! Siapkan kartu pelajar untuk diserahkan saat pengambilan alat.'
         : 'Permintaan peminjaman terkirim! Menunggu verifikasi admin.');
     setCart([]); setNotes(''); setBorrowDate(''); setBorrowTime(''); setDueDate(''); setDueTime(''); setTeacherId('');
-    setBorrowScope('dalam_lab'); setAgreeCollateral(false);
+    setBorrowScope('dalam_lab'); setAgreeCollateral(false); setScheduleId('');
     setTimeout(() => { setShowSuccess(null); navigate('/my-loans'); }, 2500);
   };
 
