@@ -168,6 +168,28 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const deleteEquipment = useCallback((id: string) => setEquipment(prev => prev.filter(e => e.id !== id)), []);
 
+  // ===== Schedules =====
+  const addSchedule = useCallback((s: JadwalPraktikum) => setSchedules(prev => [s, ...prev]), []);
+  const updateSchedule = useCallback((id: string, patch: Partial<JadwalPraktikum>) => {
+    setSchedules(prev => prev.map(s => (s.id === id ? { ...s, ...patch } : s)));
+  }, []);
+  const deleteSchedule = useCallback((id: string) => setSchedules(prev => prev.filter(s => s.id !== id)), []);
+  const getSchedulesForClass = useCallback((className: string) =>
+    schedules.filter(s => s.status === 'aktif' && s.kelas === className), [schedules]);
+
+  // Hitung qty teralokasi (reserved) untuk alat di tanggal tertentu — dari jadwal aktif.
+  const calculateReservedQty = useCallback((equipmentId: string, date: string): number => {
+    return schedules
+      .filter(s => s.status === 'aktif' && s.tanggal === date)
+      .reduce((sum, s) => sum + (s.requiredEquipment?.find(r => r.equipmentId === equipmentId)?.quantity ?? 0), 0);
+  }, [schedules]);
+
+  const getAvailableForBooking = useCallback((equipmentId: string, date: string): number => {
+    const eq = equipment.find(e => e.id === equipmentId);
+    if (!eq) return 0;
+    return Math.max(0, eq.available - calculateReservedQty(equipmentId, date));
+  }, [equipment, calculateReservedQty]);
+
   const submitLoan = useCallback((input: NewLoanInput[] | NewLoanInput, shared?: Partial<NewLoanInput>): Loan[] => {
     const arr = Array.isArray(input) ? input : [input];
     const { date, time } = nowParts();
@@ -178,6 +200,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         const merged = { ...inp, ...shared } as NewLoanInput;
         const eq = equipment.find(e => e.id === merged.equipmentId);
         const isBahan = merged.itemType === 'bahan';
+        const schedule = merged.scheduleId ? schedules.find(s => s.id === merged.scheduleId) : undefined;
+        // Conflict / queue logic untuk alat
+        let initialStatus: Loan['status'] = isBahan ? 'diambil' : 'diminta';
+        if (!isBahan && schedule && merged.borrowDate) {
+          const requesterScore = PRIORITY_SCORE[schedule.priority];
+          const reservedByOthers = schedules
+            .filter(s => s.id !== schedule.id && s.status === 'aktif' && s.tanggal === merged.borrowDate)
+            .reduce((sum, s) => {
+              const req = s.requiredEquipment?.find(r => r.equipmentId === merged.equipmentId);
+              if (!req) return sum;
+              return PRIORITY_SCORE[s.priority] >= requesterScore ? sum + req.quantity : sum;
+            }, 0);
+          const eqAvail = eq?.available ?? 0;
+          if (eqAvail - reservedByOthers < merged.quantity) {
+            initialStatus = 'antrian';
+          }
+        }
         const loan: Loan = {
           id: `L-${Date.now()}-${i}`,
           equipmentId: merged.equipmentId,
@@ -189,7 +228,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           teacherId: merged.teacherId,
           teacherName: merged.teacherName,
           quantity: merged.quantity,
-          status: isBahan ? 'diambil' : 'diminta',
+          status: initialStatus,
           requestDate: date,
           requestTime: time,
           notes: merged.notes,
@@ -203,6 +242,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           collateral: !isBahan && merged.borrowScope === 'bawa_pulang'
             ? { type: 'kartu_pelajar', status: 'tidak_diperlukan' }
             : undefined,
+          scheduleId: schedule?.id,
+          scheduleTitle: schedule?.title,
+          schedulePriority: schedule?.priority,
         };
         next.unshift(loan);
         created.push(loan);
