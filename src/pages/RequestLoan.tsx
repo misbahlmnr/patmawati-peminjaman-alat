@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { usersData } from '@/data/mockData';
 import { Equipment, BorrowScope } from '@/types';
-import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, User, Wrench, Package, Info, MapPin, CreditCard, AlertTriangle } from 'lucide-react';
+import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, User, Wrench, Package, Info, MapPin, CreditCard, AlertTriangle, CalendarDays, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,7 +27,7 @@ type Tab = 'alat' | 'bahan';
 
 export default function RequestLoan() {
   const { user } = useAuth();
-  const { equipment, submitLoan } = useData();
+  const { equipment, submitLoan, getSchedulesForClass } = useData();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const initialTab = (params.get('tab') as Tab) === 'bahan' ? 'bahan' : 'alat';
@@ -43,7 +43,17 @@ export default function RequestLoan() {
   const [teacherId, setTeacherId] = useState('');
   const [borrowScope, setBorrowScope] = useState<BorrowScope>('dalam_lab');
   const [agreeCollateral, setAgreeCollateral] = useState(false);
+  const [scheduleId, setScheduleId] = useState('');
   const [showSuccess, setShowSuccess] = useState<string | null>(null);
+
+  const studentSchedules = useMemo(() => {
+    if (!user?.class) return [];
+    const today = new Date().toISOString().slice(0, 10);
+    return getSchedulesForClass(user.class)
+      .filter(s => s.tanggal >= today)
+      .sort((a, b) => (a.tanggal + a.jamMulai).localeCompare(b.tanggal + b.jamMulai));
+  }, [user, getSchedulesForClass]);
+  const selectedSchedule = useMemo(() => studentSchedules.find(s => s.id === scheduleId), [studentSchedules, scheduleId]);
 
   // Preselect via ?id=
   useEffect(() => {
