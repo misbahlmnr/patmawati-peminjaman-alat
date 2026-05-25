@@ -485,8 +485,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <DataContext.Provider value={{
-      equipment, loans, notifications,
+      equipment, loans, notifications, schedules,
       addEquipment, updateEquipment, deleteEquipment,
+      addSchedule, updateSchedule, deleteSchedule, getSchedulesForClass, calculateReservedQty, getAvailableForBooking,
       submitLoan, approveLoan, rejectLoan, requestReturn, confirmReturn, inspectReturn, completeCompensation,
       markRead, markAllRead, deleteNotification, unreadCount, pushNotification,
     }}>
