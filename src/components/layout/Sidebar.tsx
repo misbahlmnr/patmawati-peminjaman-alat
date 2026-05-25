@@ -16,6 +16,7 @@ import {
   Wrench,
   Package,
   CreditCard,
+  CalendarDays,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +30,7 @@ const adminMenuItems = [
   { icon: Users, label: 'Kelola Pengguna', path: '/users' },
   { icon: Wrench, label: 'Kelola Alat', path: '/equipment?tab=alat' },
   { icon: Package, label: 'Kelola Bahan', path: '/equipment?tab=bahan' },
+  { icon: CalendarDays, label: 'Jadwal Praktikum', path: '/schedules' },
   { icon: ClipboardList, label: 'Peminjaman', path: '/loans' },
   { icon: CreditCard, label: 'Jaminan Kartu', path: '/collateral' },
   { icon: Bell, label: 'Notifikasi', path: '/notifications' },
@@ -38,6 +40,7 @@ const adminMenuItems = [
 const guruMenuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: Box, label: 'Inventaris', path: '/equipment' },
+  { icon: CalendarDays, label: 'Jadwal Praktikum', path: '/schedules' },
   { icon: ClipboardList, label: 'Peminjaman Siswa', path: '/loans' },
   { icon: History, label: 'Riwayat', path: '/history' },
   { icon: BarChart3, label: 'Laporan', path: '/reports' },

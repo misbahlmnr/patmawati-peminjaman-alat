@@ -19,6 +19,7 @@ import Notifications from "./pages/Notifications";
 import Users from "./pages/Users";
 import Reports from "./pages/Reports";
 import Collateral from "./pages/Collateral";
+import Schedules from "./pages/Schedules";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/users" element={<Users />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/collateral" element={<Collateral />} />
+              <Route path="/schedules" element={<Schedules />} />
               <Route path="/settings" element={<Dashboard />} />
             </Route>
 
