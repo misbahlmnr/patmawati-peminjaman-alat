@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { usersData } from '@/data/mockData';
 import { Equipment, BorrowScope } from '@/types';
-import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, User, Wrench, Package, Info, MapPin, CreditCard, AlertTriangle } from 'lucide-react';
+import { Search, ShoppingCart, X, Calendar, FileText, Send, Check, User, Wrench, Package, Info, MapPin, CreditCard, AlertTriangle, CalendarDays, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,7 +27,7 @@ type Tab = 'alat' | 'bahan';
 
 export default function RequestLoan() {
   const { user } = useAuth();
-  const { equipment, submitLoan } = useData();
+  const { equipment, submitLoan, getSchedulesForClass } = useData();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const initialTab = (params.get('tab') as Tab) === 'bahan' ? 'bahan' : 'alat';
@@ -43,7 +43,17 @@ export default function RequestLoan() {
   const [teacherId, setTeacherId] = useState('');
   const [borrowScope, setBorrowScope] = useState<BorrowScope>('dalam_lab');
   const [agreeCollateral, setAgreeCollateral] = useState(false);
+  const [scheduleId, setScheduleId] = useState('');
   const [showSuccess, setShowSuccess] = useState<string | null>(null);
+
+  const studentSchedules = useMemo(() => {
+    if (!user?.class) return [];
+    const today = new Date().toISOString().slice(0, 10);
+    return getSchedulesForClass(user.class)
+      .filter(s => s.tanggal >= today)
+      .sort((a, b) => (a.tanggal + a.jamMulai).localeCompare(b.tanggal + b.jamMulai));
+  }, [user, getSchedulesForClass]);
+  const selectedSchedule = useMemo(() => studentSchedules.find(s => s.id === scheduleId), [studentSchedules, scheduleId]);
 
   // Preselect via ?id=
   useEffect(() => {
@@ -102,7 +112,7 @@ export default function RequestLoan() {
       teacherId,
       teacherName: teacher?.name,
       notes,
-      ...(tab === 'alat' ? { borrowDate, borrowTime, dueDate, dueTime, borrowScope } : {}),
+      ...(tab === 'alat' ? { borrowDate, borrowTime, dueDate, dueTime, borrowScope, scheduleId } : {}),
     }));
     submitLoan(items);
     setShowSuccess(tab === 'bahan'
@@ -111,7 +121,7 @@ export default function RequestLoan() {
         ? 'Permintaan terkirim! Siapkan kartu pelajar untuk diserahkan saat pengambilan alat.'
         : 'Permintaan peminjaman terkirim! Menunggu verifikasi admin.');
     setCart([]); setNotes(''); setBorrowDate(''); setBorrowTime(''); setDueDate(''); setDueTime(''); setTeacherId('');
-    setBorrowScope('dalam_lab'); setAgreeCollateral(false);
+    setBorrowScope('dalam_lab'); setAgreeCollateral(false); setScheduleId('');
     setTimeout(() => { setShowSuccess(null); navigate('/my-loans'); }, 2500);
   };
 
@@ -246,6 +256,50 @@ export default function RequestLoan() {
 
               {!isBahan && (
                 <>
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> Jadwal Praktikum</Label>
+                    {studentSchedules.length === 0 ? (
+                      <div className="text-xs bg-destructive/10 text-destructive rounded-lg p-2.5 flex items-start gap-2">
+                        <AlertTriangle className="w-3.5 h-3.5 mt-0.5" />
+                        <span>Tidak ada jadwal praktikum aktif untuk kelas Anda. Hubungi admin/guru.</span>
+                      </div>
+                    ) : (
+                      <Select value={scheduleId} onValueChange={(v) => {
+                        setScheduleId(v);
+                        const s = studentSchedules.find(x => x.id === v);
+                        if (s) {
+                          setBorrowDate(s.tanggal);
+                          setBorrowTime(s.jamMulai);
+                          setDueDate(s.tanggal);
+                          setDueTime(s.jamSelesai);
+                        }
+                      }}>
+                        <SelectTrigger><SelectValue placeholder="Pilih jadwal..." /></SelectTrigger>
+                        <SelectContent>
+                          {studentSchedules.map(s => (
+                            <SelectItem key={s.id} value={s.id}>
+                              {new Date(s.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })} • {s.jamMulai} — {s.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    {selectedSchedule && (
+                      <div className={cn('rounded-lg p-2.5 text-xs space-y-1 border',
+                        selectedSchedule.priority === 'lomba' ? 'bg-destructive/5 border-destructive/30' :
+                        selectedSchedule.priority === 'tinggi' ? 'bg-warning/5 border-warning/30' :
+                        'bg-secondary/40 border-border')}>
+                        <p className="font-medium">{selectedSchedule.mataKuliah} • {selectedSchedule.kelas}</p>
+                        <p className="text-muted-foreground">{new Date(selectedSchedule.tanggal).toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long' })} • {selectedSchedule.jamMulai}-{selectedSchedule.jamSelesai}</p>
+                        {selectedSchedule.priority === 'lomba' && (
+                          <p className="flex items-center gap-1 text-destructive font-medium"><Trophy className="w-3 h-3" /> Prioritas Tinggi — Lomba</p>
+                        )}
+                        {selectedSchedule.priority === 'tinggi' && (
+                          <p className="text-warning font-medium">Prioritas Tinggi</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <div className="space-y-2">
                     <Label className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Lokasi Penggunaan</Label>
                     <RadioGroup value={borrowScope} onValueChange={(v) => setBorrowScope(v as BorrowScope)} className="gap-2">
@@ -303,7 +357,7 @@ export default function RequestLoan() {
 
               <Button type="submit" disabled={
                 cart.length === 0 || !teacherId ||
-                (!isBahan && (!borrowDate || !borrowTime || !dueDate || !dueTime)) ||
+                (!isBahan && (!scheduleId || !borrowDate || !borrowTime || !dueDate || !dueTime)) ||
                 (!isBahan && borrowScope === 'bawa_pulang' && !agreeCollateral)
               } className="w-full">
                 <Send className="w-4 h-4 mr-2" />

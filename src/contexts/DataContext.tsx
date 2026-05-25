@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { Equipment, Loan, Notification, ItemType, BorrowScope, LoanInspection, isLoanOverdue } from '@/types';
+import { Equipment, Loan, Notification, ItemType, BorrowScope, LoanInspection, JadwalPraktikum, SchedulePriority, PRIORITY_SCORE, isLoanOverdue } from '@/types';
 import {
   equipmentData as seedEquipment,
   loansData as seedLoans,
   notificationsData as seedNotifications,
+  schedulesData as seedSchedules,
   usersData,
 } from '@/data/mockData';
 
@@ -22,6 +23,7 @@ interface NewLoanInput {
   dueDate?: string;
   dueTime?: string;
   borrowScope?: BorrowScope;
+  scheduleId?: string;
 }
 
 export interface InspectionResult {
@@ -37,10 +39,18 @@ interface DataContextType {
   equipment: Equipment[];
   loans: Loan[];
   notifications: Notification[];
+  schedules: JadwalPraktikum[];
   // equipment
   addEquipment: (eq: Equipment) => void;
   updateEquipment: (id: string, patch: Partial<Equipment>) => void;
   deleteEquipment: (id: string) => void;
+  // schedules
+  addSchedule: (s: JadwalPraktikum) => void;
+  updateSchedule: (id: string, patch: Partial<JadwalPraktikum>) => void;
+  deleteSchedule: (id: string) => void;
+  getSchedulesForClass: (className: string) => JadwalPraktikum[];
+  calculateReservedQty: (equipmentId: string, date: string) => number;
+  getAvailableForBooking: (equipmentId: string, date: string) => number;
   // loans
   submitLoan: (input: NewLoanInput[] | NewLoanInput, shared?: Partial<NewLoanInput>) => Loan[];
   approveLoan: (id: string) => void;
@@ -63,6 +73,7 @@ const LS = {
   eq: 'lab.equipment.v1',
   loan: 'lab.loans.v1',
   notif: 'lab.notifications.v1',
+  sched: 'lab.schedules.v1',
 };
 
 function load<T>(key: string, fallback: T): T {
@@ -87,10 +98,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [equipment, setEquipment] = useState<Equipment[]>(() => load(LS.eq, seedEquipment));
   const [loans, setLoans] = useState<Loan[]>(() => load(LS.loan, seedLoans));
   const [notifications, setNotifications] = useState<Notification[]>(() => load(LS.notif, seedNotifications));
+  const [schedules, setSchedules] = useState<JadwalPraktikum[]>(() => load(LS.sched, seedSchedules));
 
   useEffect(() => localStorage.setItem(LS.eq, JSON.stringify(equipment)), [equipment]);
   useEffect(() => localStorage.setItem(LS.loan, JSON.stringify(loans)), [loans]);
   useEffect(() => localStorage.setItem(LS.notif, JSON.stringify(notifications)), [notifications]);
+  useEffect(() => localStorage.setItem(LS.sched, JSON.stringify(schedules)), [schedules]);
 
   const adminId = useMemo(() => usersData.find(u => u.role === 'admin')?.id ?? '1', []);
 
@@ -155,6 +168,28 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const deleteEquipment = useCallback((id: string) => setEquipment(prev => prev.filter(e => e.id !== id)), []);
 
+  // ===== Schedules =====
+  const addSchedule = useCallback((s: JadwalPraktikum) => setSchedules(prev => [s, ...prev]), []);
+  const updateSchedule = useCallback((id: string, patch: Partial<JadwalPraktikum>) => {
+    setSchedules(prev => prev.map(s => (s.id === id ? { ...s, ...patch } : s)));
+  }, []);
+  const deleteSchedule = useCallback((id: string) => setSchedules(prev => prev.filter(s => s.id !== id)), []);
+  const getSchedulesForClass = useCallback((className: string) =>
+    schedules.filter(s => s.status === 'aktif' && s.kelas === className), [schedules]);
+
+  // Hitung qty teralokasi (reserved) untuk alat di tanggal tertentu — dari jadwal aktif.
+  const calculateReservedQty = useCallback((equipmentId: string, date: string): number => {
+    return schedules
+      .filter(s => s.status === 'aktif' && s.tanggal === date)
+      .reduce((sum, s) => sum + (s.requiredEquipment?.find(r => r.equipmentId === equipmentId)?.quantity ?? 0), 0);
+  }, [schedules]);
+
+  const getAvailableForBooking = useCallback((equipmentId: string, date: string): number => {
+    const eq = equipment.find(e => e.id === equipmentId);
+    if (!eq) return 0;
+    return Math.max(0, eq.available - calculateReservedQty(equipmentId, date));
+  }, [equipment, calculateReservedQty]);
+
   const submitLoan = useCallback((input: NewLoanInput[] | NewLoanInput, shared?: Partial<NewLoanInput>): Loan[] => {
     const arr = Array.isArray(input) ? input : [input];
     const { date, time } = nowParts();
@@ -165,6 +200,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         const merged = { ...inp, ...shared } as NewLoanInput;
         const eq = equipment.find(e => e.id === merged.equipmentId);
         const isBahan = merged.itemType === 'bahan';
+        const schedule = merged.scheduleId ? schedules.find(s => s.id === merged.scheduleId) : undefined;
+        // Conflict / queue logic untuk alat
+        let initialStatus: Loan['status'] = isBahan ? 'diambil' : 'diminta';
+        if (!isBahan && schedule && merged.borrowDate) {
+          const requesterScore = PRIORITY_SCORE[schedule.priority];
+          const reservedByOthers = schedules
+            .filter(s => s.id !== schedule.id && s.status === 'aktif' && s.tanggal === merged.borrowDate)
+            .reduce((sum, s) => {
+              const req = s.requiredEquipment?.find(r => r.equipmentId === merged.equipmentId);
+              if (!req) return sum;
+              return PRIORITY_SCORE[s.priority] >= requesterScore ? sum + req.quantity : sum;
+            }, 0);
+          const eqAvail = eq?.available ?? 0;
+          if (eqAvail - reservedByOthers < merged.quantity) {
+            initialStatus = 'antrian';
+          }
+        }
         const loan: Loan = {
           id: `L-${Date.now()}-${i}`,
           equipmentId: merged.equipmentId,
@@ -176,7 +228,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           teacherId: merged.teacherId,
           teacherName: merged.teacherName,
           quantity: merged.quantity,
-          status: isBahan ? 'diambil' : 'diminta',
+          status: initialStatus,
           requestDate: date,
           requestTime: time,
           notes: merged.notes,
@@ -190,6 +242,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           collateral: !isBahan && merged.borrowScope === 'bawa_pulang'
             ? { type: 'kartu_pelajar', status: 'tidak_diperlukan' }
             : undefined,
+          scheduleId: schedule?.id,
+          scheduleTitle: schedule?.title,
+          schedulePriority: schedule?.priority,
         };
         next.unshift(loan);
         created.push(loan);
@@ -430,8 +485,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <DataContext.Provider value={{
-      equipment, loans, notifications,
+      equipment, loans, notifications, schedules,
       addEquipment, updateEquipment, deleteEquipment,
+      addSchedule, updateSchedule, deleteSchedule, getSchedulesForClass, calculateReservedQty, getAvailableForBooking,
       submitLoan, approveLoan, rejectLoan, requestReturn, confirmReturn, inspectReturn, completeCompensation,
       markRead, markAllRead, deleteNotification, unreadCount, pushNotification,
     }}>
