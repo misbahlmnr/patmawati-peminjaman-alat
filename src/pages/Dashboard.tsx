@@ -4,19 +4,25 @@ import { StatCard } from '@/components/dashboard/StatCard';
 import { RecentLoansTable } from '@/components/dashboard/RecentLoansTable';
 import {
   ClipboardCheck, FileText, AlertTriangle, PackageMinus, Bell,
-  Wrench, Package, ArrowRight, CheckCircle2, Users as UsersIcon
+  Wrench, Package, ArrowRight, CheckCircle2, Users as UsersIcon,
+  CalendarDays, CreditCard, ListOrdered,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { loans, equipment, notifications } = useData();
+  const { loans, equipment, notifications, schedules, getSchedulesForClass } = useData();
 
   const pendingAlat = loans.filter(l => l.status === 'diminta' && l.itemType === 'alat');
+  const queueAlat = loans.filter(l => l.status === 'antrian' && l.itemType === 'alat');
   const activeAlat = loans.filter(l => l.status === 'dipinjam' || l.status === 'terlambat');
   const overdue = loans.filter(l => l.status === 'terlambat');
   const lowStock = equipment.filter(e => e.itemType === 'bahan' && e.minStock !== undefined && (e.stockRemaining ?? e.available) <= e.minStock);
+  const heldCards = loans.filter(l => l.collateral?.status === 'ditahan');
+
+  const today = new Date(); const weekEnd = new Date(); weekEnd.setDate(today.getDate() + 7);
+  const activeSchedulesWeek = schedules.filter(s => s.status === 'aktif' && s.tanggal >= today.toISOString().slice(0, 10) && s.tanggal <= weekEnd.toISOString().slice(0, 10));
 
   const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
   const bahanThisWeek = loans.filter(l => l.itemType === 'bahan' && new Date(l.requestDate) >= weekAgo);
@@ -24,8 +30,13 @@ export default function Dashboard() {
   // ===== ADMIN =====
   const renderAdmin = () => (
     <>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard title="Permintaan Pending" value={pendingAlat.length} icon={ClipboardCheck} variant={pendingAlat.length > 0 ? 'warning' : 'default'} />
+        <StatCard title="Antrian Konflik Stok" value={queueAlat.length} icon={ListOrdered} variant={queueAlat.length > 0 ? 'warning' : 'default'} />
+        <StatCard title="Jadwal Aktif (7 hari)" value={activeSchedulesWeek.length} icon={CalendarDays} variant="primary" />
+        <StatCard title="Kartu Ditahan" value={heldCards.length} icon={CreditCard} variant={heldCards.length > 0 ? 'warning' : 'default'} />
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <StatCard title="Alat Dipinjam" value={activeAlat.length} icon={FileText} variant="primary" />
         <StatCard title="Keterlambatan" value={overdue.length} icon={AlertTriangle} variant={overdue.length > 0 ? 'danger' : 'default'} />
         <StatCard title="Stok Bahan Menipis" value={lowStock.length} icon={PackageMinus} variant={lowStock.length > 0 ? 'warning' : 'default'} />
