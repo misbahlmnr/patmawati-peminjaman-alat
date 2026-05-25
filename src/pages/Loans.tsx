@@ -111,7 +111,7 @@ export default function Loans() {
         loan={detail}
         onClose={() => setDetail(null)}
         footer={detail && user?.role === 'admin' ? (
-          detail.status === 'diminta' ? (
+          detail.status === 'diminta' || detail.status === 'antrian' ? (
             <div className="flex gap-3">
               <button onClick={() => { setRejectFor(detail); setDetail(null); }}
                 className="btn-outline flex-1 text-destructive border-destructive hover:bg-destructive/10">
