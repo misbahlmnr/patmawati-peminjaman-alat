@@ -1,4 +1,4 @@
-import { Equipment, Loan, Notification, DashboardStats, User } from '@/types';
+import { Equipment, Loan, Notification, DashboardStats, User, JadwalPraktikum } from '@/types';
 
 export const usersData: User[] = [
   {
@@ -427,3 +427,139 @@ export const classOptions = [
   'XII TAV 1',
   'XII TAV 2',
 ];
+
+// Relative-to-today dates so schedules always feel current
+const _today = new Date();
+const _date = (offsetDays: number) => {
+  const d = new Date(_today);
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
+};
+
+export const schedulesData: JadwalPraktikum[] = [
+  {
+    id: 'S1',
+    title: 'Praktik Shooting Video Dokumenter',
+    mataKuliah: 'Produksi Video',
+    jurusan: 'Audio Video',
+    kelas: 'XII TAV 1',
+    tanggal: _date(1),
+    jamMulai: '08:00',
+    jamSelesai: '11:00',
+    ruangan: 'Lab AV-1',
+    guruId: '2',
+    guruName: 'Bpk. Ahmad Wijaya',
+    priority: 'normal',
+    status: 'aktif',
+    requiredEquipment: [
+      { equipmentId: 'A1', equipmentName: 'Kamera DSLR Canon EOS 80D', quantity: 1 },
+      { equipmentId: 'A3', equipmentName: 'Tripod Video Manfrotto', quantity: 1 },
+    ],
+    notes: 'Praktik dokumenter reguler.',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'S2',
+    title: 'Praktik Rekaman Podcast',
+    mataKuliah: 'Produksi Audio',
+    jurusan: 'Audio Video',
+    kelas: 'XII TAV 1',
+    tanggal: _date(2),
+    jamMulai: '13:00',
+    jamSelesai: '15:30',
+    ruangan: 'Lab AV-2',
+    guruId: '7',
+    guruName: 'Ibu Sri Wahyuni',
+    priority: 'normal',
+    status: 'aktif',
+    requiredEquipment: [
+      { equipmentId: 'A2', equipmentName: 'Microphone Condenser Rode NT1', quantity: 2 },
+      { equipmentId: 'A6', equipmentName: 'Headphone Sony MDR-7506', quantity: 2 },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'S3',
+    title: 'Ujian Praktik Videografi',
+    mataKuliah: 'Produksi Video',
+    jurusan: 'Audio Video',
+    kelas: 'XII TAV 1',
+    tanggal: _date(4),
+    jamMulai: '08:00',
+    jamSelesai: '12:00',
+    ruangan: 'Lab AV-1',
+    guruId: '2',
+    guruName: 'Bpk. Ahmad Wijaya',
+    priority: 'tinggi',
+    status: 'aktif',
+    requiredEquipment: [
+      { equipmentId: 'A1', equipmentName: 'Kamera DSLR Canon EOS 80D', quantity: 2 },
+      { equipmentId: 'A7', equipmentName: 'Gimbal DJI Ronin-SC', quantity: 1 },
+    ],
+    notes: 'Ujian praktik akhir semester.',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'S4',
+    title: 'Persiapan LKS Provinsi — Audio Video',
+    mataKuliah: 'Kompetensi Kejuruan',
+    jurusan: 'Audio Video',
+    kelas: 'XII TAV 1',
+    tanggal: _date(3),
+    jamMulai: '09:00',
+    jamSelesai: '16:00',
+    ruangan: 'Lab AV-1',
+    guruId: '2',
+    guruName: 'Bpk. Ahmad Wijaya',
+    priority: 'lomba',
+    status: 'aktif',
+    requiredEquipment: [
+      { equipmentId: 'A1', equipmentName: 'Kamera DSLR Canon EOS 80D', quantity: 3 },
+      { equipmentId: 'A5', equipmentName: 'LED Panel Light YN600', quantity: 2 },
+      { equipmentId: 'A4', equipmentName: 'Audio Mixer Yamaha MG12XU', quantity: 1 },
+    ],
+    notes: 'Prioritas tertinggi — alokasi alat utama untuk lomba.',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'S5',
+    title: 'Lomba Film Pendek Tingkat Kota',
+    mataKuliah: 'Produksi Video',
+    jurusan: 'Audio Video',
+    kelas: 'XI TAV 1',
+    tanggal: _date(5),
+    jamMulai: '07:00',
+    jamSelesai: '17:00',
+    ruangan: 'Lokasi Eksternal',
+    guruId: '7',
+    guruName: 'Ibu Sri Wahyuni',
+    priority: 'lomba',
+    status: 'aktif',
+    requiredEquipment: [
+      { equipmentId: 'A1', equipmentName: 'Kamera DSLR Canon EOS 80D', quantity: 2 },
+      { equipmentId: 'A7', equipmentName: 'Gimbal DJI Ronin-SC', quantity: 1 },
+      { equipmentId: 'A2', equipmentName: 'Microphone Condenser Rode NT1', quantity: 1 },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'S6',
+    title: 'Praktik Soldering Dasar',
+    mataKuliah: 'Elektronika Dasar',
+    jurusan: 'Audio Video',
+    kelas: 'X TAV 1',
+    tanggal: _date(-10),
+    jamMulai: '10:00',
+    jamSelesai: '12:00',
+    ruangan: 'Lab Elektro',
+    guruId: '2',
+    guruName: 'Bpk. Ahmad Wijaya',
+    priority: 'normal',
+    status: 'selesai',
+    requiredEquipment: [
+      { equipmentId: 'A8', equipmentName: 'Solder Station Goot PX-201', quantity: 6 },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+];
+
